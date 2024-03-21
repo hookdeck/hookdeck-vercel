@@ -17,7 +17,9 @@ function callMiddleware(middleware: any, request: any, context: any) {
 }
 
 export function withHookdeck(middleware: MiddlewareFunction): MiddlewareAsyncFunction {
-    return (request: any, context: any): Promise<any> => {
+  console.log("Installing Hookdeck wrapper...");
+  return (request: any, context: any): Promise<any> => {
+      console.log("Entering Hookdeck wrapper...");
       const hookdeckConfig = process.env.HOOKDECK_CONFIG;
       if (!hookdeckConfig) {
         console.error('Error reading HOOKDECK_CONFIG env variable');
@@ -34,8 +36,8 @@ export function withHookdeck(middleware: MiddlewareFunction): MiddlewareAsyncFun
         });
         // TODO: more than one match?
         if (matching.length > 0) {
-          console.log(JSON.stringify(request.headers));
-          if (typeof request.headers['X-Hookdeck-EventID'] !== "string") {
+          // console.log(JSON.stringify(request.headers));
+          if (typeof request.headers['x-hookdeck-eventid'] !== "string") {
             // first call, forward to Hookdeck
             const url = matching[0].connection.source.url;
 
