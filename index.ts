@@ -1,5 +1,5 @@
 
-type MiddlewareFunction = (request: any, context: any) => Request;
+type MiddlewareFunction = (request: any, context: any) => any;
 type MiddlewareAsyncFunction = (request: any, context: any) => Promise<any>;
 
 function callMiddleware(middleware: any, request: any, context: any) {
@@ -16,7 +16,7 @@ function callMiddleware(middleware: any, request: any, context: any) {
 }
 }
 
-export function withHookdeck(middleware: MiddlewareAsyncFunction | MiddlewareFunction): MiddlewareAsyncFunction {
+export function withHookdeck(middleware: MiddlewareFunction): MiddlewareAsyncFunction {
     return (request: any, context: any): Promise<any> => {
       const hookdeckConfig = process.env.HOOKDECK_CONFIG;
       if (!hookdeckConfig) {
