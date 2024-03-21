@@ -1,22 +1,32 @@
 
-// TODO do I need async and non-async versions? 
 type MiddlewareFunction = (request: any, context: any) => Request;
 type MiddlewareAsyncFunction = (request: any, context: any) => Promise<any>;
 
-export function withHookdeck(middleware: MiddlewareAsyncFunction): MiddlewareAsyncFunction {
+function callMiddleware(middleware: any, request: any, context: any) {
+  console.log("Calling middleware...");
+  const res = middleware(request, context);
+  if (typeof res['then'] === 'function') {
+      // probably a promise
+      return res;
+  } else {
+    // definitely not a promise
+    return new Promise((resolve) => {
+      resolve(res);
+    });
+}
+}
+
+export function withHookdeck(middleware: MiddlewareAsyncFunction | MiddlewareFunction): MiddlewareAsyncFunction {
     return (request: any, context: any): Promise<any> => {
       const hookdeckConfig = process.env.HOOKDECK_CONFIG;
       if (!hookdeckConfig) {
         console.error('Error reading HOOKDECK_CONFIG env variable');
         console.error(JSON.stringify(process.env));
         // TODO: manage error
-        console.log("Calling middleware");
-        return new Promise((resolve) => {
-          resolve(middleware(request, context));
-        });
+        return callMiddleware(middleware, request, context);
       }
       try {
-        const json = JSON.parse(hookdeckConfig);
+        const json = JSON.parse(hookdeckConfig!);
         const pathname = (request.nextUrl ?? {}).pathname;
     
         const matching = json.filter((e: any) => {
@@ -48,9 +58,6 @@ export function withHookdeck(middleware: MiddlewareAsyncFunction): MiddlewareAsy
         console.error(e);
       }
 
-      console.log("Calling middleware");
-      return new Promise((resolve) => {
-        resolve(middleware(request, context));
-      });
+      return callMiddleware(middleware, request, context);
     } 
 }
