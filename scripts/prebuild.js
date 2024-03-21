@@ -51,25 +51,23 @@ function validateConfigs(configs) {
     return false;
   }
 
-  let valid = true;
-
   for (const prop of ['vercel_project_id', 'vercel_token']) {
-    valid &= isValidPropertyValue(configs[prop]);
+    if (!isValidPropertyValue(configs[prop])) {
+      return false;
+    }
   }
-  if (!valid) {
-    return false;
-  }
-
-  const string_props = ["source_name", "destination_url", "match_path"]; 
-  for(const config of configs.connections) {
-    for (const prop of string_props) {
-      valid &= isValidPropertyValue(configs[prop]);
+  const conn_props = ["source_name", "destination_url", "match_path"]; 
+  for(const conn_config of configs.connections) {
+    for (const prop of conn_props) {
+      if (!isValidPropertyValue(conn_config[prop])) {
+        return false;
+      }
     }
   }
 
   // TODO: better validation
   
-  return valid;
+  return true;
 }
 
 
