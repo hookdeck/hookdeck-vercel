@@ -13,7 +13,7 @@ function callMiddleware(middleware: any, request: any, context: any) {
     return new Promise((resolve) => {
       resolve(res);
     });
-}
+  }
 }
 
 export function withHookdeck(middleware: MiddlewareFunction): MiddlewareAsyncFunction {
