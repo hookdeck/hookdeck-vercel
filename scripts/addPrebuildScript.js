@@ -7,11 +7,11 @@ const appRoot = require('app-root-path');
 const libraryName = 'vercel-integration-demo';
 const prebuildScript = `node .hookdeck/prebuild.js && rm -rf .hookdeck/prebuild.js`;
 const green = "color:green;"
-const packagePath = path.resolve(`${appRoot}/package.json`);
-const hookdeckConfigPath = path.resolve(`${appRoot}/hookdeck.config.js`);
 
 
 console.log(`[${libraryName}] Post Install Script Running...`);
+
+const packagePath = path.resolve(`${appRoot}/package.json`);
 if (fs.existsSync(packagePath)) {
     const packageJSON = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
     if (!packageJSON.scripts.prebuild) {
@@ -38,14 +38,15 @@ if (fs.existsSync(packagePath)) {
       console.log('prebuild script successfully copied');
   } else {
     console.log('Could not find package.json in the current directory.');
-    process.exit(1); // Exit with a failure status code
+    process.exit(1);
 }
 
-if (fs.existsSync(hookdeckConfigPath) === false) {
+const hookdeckConfigPath = path.resolve(`${appRoot}/hookdeck.config.js`);
+
+if (!fs.existsSync(hookdeckConfigPath)) {
     const sourcePath = path.join(__dirname, "hookdeck.config.js");
-    const destinationPath = path.join(`${appRoot}`, "hookdeck.config.js");
-    fs.copyFileSync(sourcePath, destinationPath);
-    console.log("Default hookdeck.config.js added to the root of your project");
+    fs.copyFileSync(sourcePath, hookdeckConfigPath);
+    console.log("Default hookdeck.config.js added in your project root");
 } else {
-    console.log("hookdeck.config.js was already in your project");
+    console.log("hookdeck.config.js already exists in your project");
 }
