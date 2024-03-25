@@ -326,7 +326,7 @@ function validateMiddleware() {
   if (!hasLibraryName || !hasWrapper) {
     // If it's not being used, just shows a warning
     console.warn(
-      `Usage of ${LIBRARY_NAME} not found at ${middlewareFilePath}. Consider removing ${LIBRARY_NAME} from your dev dependencies if you are not using it.`
+      `Usage of ${LIBRARY_NAME} not found in the middleware file. Consider removing ${LIBRARY_NAME} from your dev dependencies if you are not using it.`
     );
   } else {
     console.log(`Usage of ${LIBRARY_NAME} detected`);
