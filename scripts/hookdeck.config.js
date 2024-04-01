@@ -5,8 +5,7 @@ module.exports = {
     {
       source_name: "",
       destination_url: "",
-      match_path: "",
-      api_key: ""
+      match_path: ""
     }
   ]
 };
