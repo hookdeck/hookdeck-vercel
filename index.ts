@@ -14,22 +14,61 @@ export function withHookdeck(config: any, f: Function) {
       if (matching.length > 0) {
         if (typeof request.headers['x-hookdeck-eventid'] !== "string") {
           // first call, forward to Hookdeck
+          
+          // check if there are multiple matches with the same
+          // api_key and source_name
 
-          // TODO: more than one match?
-          const api_key = matching[0].api_key || process.env.HOOKDECK_API_KEY;
-          const source_name = matching[0].source_name;
+          const used = new Map<string,[any]>;
 
-          if (!api_key) {
-            console.error("Hookdeck API key doesn't found. You must set it as a env variable named HOOKDECK_API_KEY or include it in your hookdeck.config.js file.");
-            return f.apply(this, args)
+          for (const result of matching) {
+            const api_key = result.api_key || process.env.HOOKDECK_API_KEY;
+            const source_name = result.source_name;
+
+            if (!api_key) {
+              console.error(
+                "Hookdeck API key doesn't found. You must set it as a env variable named HOOKDECK_API_KEY or include it in your hookdeck.config.js file."
+              );
+              return f.apply(this, args);
+            }
+
+            if (!source_name) {
+              console.error(
+                "Hookdeck Source name doesn't found. You must include it in your hookdeck.config.js file."
+              );
+              return f.apply(this, args);
+            }
+
+            const match_key = `${api_key}/${source_name}`;
+            const array = used[match_key] ?? [];
+            array.push(result);
+            used[match_key] = array;
           }
 
-          if (!source_name) {
-            console.error("Hookdeck Source name doesn't found. You must include it in your hookdeck.config.js file.");
-            return f.apply(this, args)
+          const promises: Promise<any>[] = [];
+          for (const array of Object.values(used)) {
+            const used_connection_ids: string[] = [];
+            if ((array as [any]).length > 1) {
+              // If there is more than one similar match, we need the connection_id 
+              // to pick out the right connection
+              for (const entry of array) {
+                if (!!entry.connection_id && !used_connection_ids.includes(entry.connection_id)) {
+                  const api_key = entry.api_key || process.env.HOOKDECK_API_KEY;
+                  const source_name = entry.source_name;
+                  promises.push(forwardToHookdeck(request, api_key, source_name, entry.connection_id));
+                  used_connection_ids.push(entry.connection_id);
+                }
+              }
+              if (promises.length === 0) {
+                console.warn('Found indistinguishable source names, could not process', array[0].source_name);
+              }
+            } else {
+              const api_key = array[0].api_key || process.env.HOOKDECK_API_KEY;
+              const source_name = array[0].source_name;
+              promises.push(forwardToHookdeck(request, api_key, source_name))
+            }
           }
 
-          return forwardToHookdeck(request, api_key, source_name);
+          return Promise.all(promises);    
         } else {
           console.log("Hookdeck's return... calling user middleware");
           // second call, bypass Hookdeck
@@ -57,7 +96,7 @@ type HookdeckConnectionConfig = {
 const AUTHENTICATED_ENTRY_POINT = 'https://hkdk.events/';
 
 
-async function forwardToHookdeck(request: Request, api_key: string, source_name: string): Promise<any> {
+async function forwardToHookdeck(request: Request, api_key: string, source_name: string, connection_id?: string): Promise<any> {
   const request_headers = {}
   // iterate using forEach because this can be either a Headers object or a plain object
   request.headers.forEach((value, key) => {
@@ -72,8 +111,9 @@ async function forwardToHookdeck(request: Request, api_key: string, source_name:
     'x-hookdeck-api-key': api_key,
     'x-hookdeck-source-name': source_name,
   }
+  // TODO:     'x-hookdeck-connection-id': connection_id
 
-  // TODO assumed string body
+  // TODO: assumed string body
   const body = await new Response(request.body).text();
 
   const options = {
