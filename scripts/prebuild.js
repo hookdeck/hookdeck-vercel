@@ -129,7 +129,7 @@ async function getConnectionWithSourceAndDestination(
   destination
 ) {
   try {
-    const url = `${HOOKDECK_API_URL}/${API_VERSION}/webhooks?source_id=${source.id}&destination_id=${destination.id}`;
+    const url = `${HOOKDECK_API_URL}/${API_VERSION}/connections?source_id=${source.id}&destination_id=${destination.id}`;
     const response = await fetch(url, {
       method: "GET",
       mode: "cors",
@@ -226,7 +226,7 @@ async function createConnection(api_key, source, destination) {
     // TODO: other configs
   };
   try {
-    const url = `${HOOKDECK_API_URL}/${API_VERSION}/webhooks`;
+    const url = `${HOOKDECK_API_URL}/${API_VERSION}/connections`;
     const response = await fetch(url, {
       method: "POST",
       mode: "cors",
