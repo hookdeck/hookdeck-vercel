@@ -370,14 +370,101 @@ async function updateConnection(api_key, config) {
       body: JSON.stringify(data),
     });
     if (response.status !== 200) {
+      console.error(
+        "Error while updating connection with ID",
+        config.connection_id
+      );
       manageResponseError(response);
       return null;
     }
     const json = await response.json();
     console.log("Connection updated", json);
+
+    // Updates configurations if neeeded
+    if (config.source_config) {
+      const source_id = json.source.id;
+      await updateSource(api_key, source_id, config);
+    }
+
+    if (config.destination_config) {
+      const destination_id = json.destination.id;
+      await updateDestination(api_key, destination_id, config);
+    }
+
     return json;
   } catch (e) {
     manageError(e);
+  }
+}
+
+async function updateSource(api_key, id, config) {
+  const data = config.source_config;
+  const url = `${HOOKDECK_API_URL}/${API_VERSION}/sources/${id}`;
+  const response = await fetch(url, {
+    method: "PUT",
+    mode: "cors",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${api_key}`,
+    },
+    credentials: "include",
+    body: JSON.stringify(data),
+  });
+  if (response.status !== 200) {
+    throw(`Error while updating source with ID ${id}`);
+  }
+  const json = await response.json();
+  console.log("Source updated", json);
+}
+
+async function updateDestination(api_key, id, config) {
+  const data = config.destination_config;
+  const url = `${HOOKDECK_API_URL}/${API_VERSION}/destinations/${id}`;
+  const response = await fetch(url, {
+    method: "PUT",
+    mode: "cors",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${api_key}`,
+    },
+    credentials: "include",
+    body: JSON.stringify(data),
+  });
+  if (response.status !== 200) {
+    throw(`Error while updating destination with ID ${id}`);
+  }
+  const json = await response.json();
+  console.log("Destination updated", json);
+}
+
+async function deleteSource(api_key, id) {
+  const url = `${HOOKDECK_API_URL}/${API_VERSION}/sources/${id}`;
+  const response = await fetch(url, {
+    method: "DELETE",
+    mode: "cors",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${api_key}`,
+    },
+    credentials: "include",
+  });
+  if (response.status !== 200) {
+    throw new Error("unable to delete source");
+  }
+}
+async function deleteDestination(api_key, id) {
+  const url = `${HOOKDECK_API_URL}/${API_VERSION}/destinations/${id}`;
+  const response = await fetch(url, {
+    method: "DELETE",
+    mode: "cors",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${api_key}`,
+    },
+    credentials: "include",
+  });
+  if (response.status !== 200) {
+    throw new Error("unable to delete destination");
   }
 }
 
@@ -401,52 +488,104 @@ async function checkPrebuild() {
     console.log('hookdeck.config.js validated successfully');
 
     const env_configs = [];
+    const created_connections_pseudo_keys = {};
     for (const conn_config of hookdeckConfig.connections) {
-        const api_key = conn_config.api_key ?? process.env.HOOKDECK_API_KEY;
-        if (!api_key) {
-          console.error(
-            `Hookdeck's API key doesn't found. You must set it as a env variable named HOOKDECK_API_KEY or include it in your hookdeck.config.js. Check ${TUTORIAL_URL} for more info.`
+      const api_key = conn_config.api_key ?? process.env.HOOKDECK_API_KEY;
+      if (!api_key) {
+        console.error(
+          `Hookdeck's API key doesn't found. You must set it as a env variable named HOOKDECK_API_KEY or include it in your hookdeck.config.js. Check ${TUTORIAL_URL} for more info.`
+        );
+        return false;
+      }
+      if (!isString(api_key) || api_key.trim().length === 0) {
+        console.error(
+          `Invalid Hookdeck API KEY format. Check ${TUTORIAL_URL} for more info.`
+        );
+        return false;
+      }
+
+      const has_connection_id = !!conn_config.connection_id;
+
+      let connection;
+      if (has_connection_id) {
+        connection = await updateConnection(api_key, conn_config);
+      } else {
+        // avoid creting identical connections
+        const pseudo_key = `${api_key}*${conn_config.source_name}*${conn_config.destination_url}`;
+        const connection_id =
+          created_connections_pseudo_keys[pseudo_key] || null;
+        let source_created = false;
+        let destination_created = false;
+        if (connection_id !== null) {
+          connection = await updateConnection(
+            api_key,
+            Object.assign({ connection_id: connection_id }, conn_config)
           );
-          return false;
-        }
-        if (!isString(api_key) || api_key.trim().length === 0) {
-          console.error(
-            `Invalid Hookdeck API KEY format. Check ${TUTORIAL_URL} for more info.`
-          );
-          return false;
-        }
-        
-        const has_connection_id = !!conn_config.connection_id;
-        let connection;
-        if(has_connection_id) {
-          connection = await updateConnection(api_key, conn_config);
-        }else{
+        } else {
           let shouldCreateConnection = false;
           let source = await getSourceByName(api_key, conn_config.source_name);
-          // TODO: this is not transactional. Create cleaup-rollback mechanism?
-      
           if (!source) {
-            source = await createSource(api_key, conn_config.source_name, conn_config.source_config);
-            shouldCreateConnection = true;
-          }
-  
-          let destination = await getDestinationByUrl(api_key, conn_config.destination_url);
-          if (!destination) {
-            destination = await createDestination(api_key, conn_config.destination_url, conn_config.destination_config);
-            shouldCreateConnection = true;
-          }
-
-          if (shouldCreateConnection) {
-            connection = await createConnection(api_key, source, destination, conn_config.connection_config);
-          } else {
-            connection = await getConnectionWithSourceAndDestination(
+            source = await createSource(
               api_key,
-              source,
-              destination
+              conn_config.source_name,
+              conn_config.source_config
             );
-            if (!connection) {
-              connection = await createConnection(api_key, source, destination, conn_config.connection_config);
+            shouldCreateConnection = true;
+            source_created = true;
+          }
+          let destination = await getDestinationByUrl(
+            api_key,
+            conn_config.destination_url
+          );
+
+          try {
+            if (!destination) {
+              destination = await createDestination(
+                api_key,
+                conn_config.destination_url,
+                conn_config.destination_config
+              );
+              shouldCreateConnection = true;
+              destination_created = true;
             }
+
+            if (shouldCreateConnection) {
+              connection = await createConnection(
+                api_key,
+                source,
+                destination,
+                conn_config.rules
+              );
+            } else {
+              connection = await getConnectionWithSourceAndDestination(
+                api_key,
+                source,
+                destination
+              );
+              if (!connection) {
+                connection = await createConnection(
+                  api_key,
+                  source,
+                  destination,
+                  conn_config.rules
+                );
+                created_connections_pseudo_keys[pseudo_key] = connection.id;
+              }
+            }
+          } catch (e) {
+            // manual rollback
+            console.log('Applying rollback');
+            try {
+              if (source_created) {
+                await deleteSource(api_key, source.id);
+              }
+              if (destination_created) {
+                await deleteDestination(api_key, destination.id);
+              }
+            } catch (_e) {
+              // This could fail too, but there's not much to do here...
+            }
+            throw e;
           }
         }
         env_configs.push({
