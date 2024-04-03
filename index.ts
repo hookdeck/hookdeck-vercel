@@ -68,7 +68,7 @@ export function withHookdeck(config: any, f: Function) {
             }
           }
 
-          return Promise.all(promises);    
+          return Promise.all(promises).then((val) => val[0]);
         } else {
           console.log("Hookdeck's return... calling user middleware");
           // second call, bypass Hookdeck
