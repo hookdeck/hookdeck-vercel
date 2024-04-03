@@ -2,23 +2,27 @@ export function withHookdeck(config: any, f: Function) {
   return function (...args) {
     const request = args[0];
     if (!config) {
-      console.error('Error getting hookdeck.config.js. Using standard middleware...');
-      return f.apply(this, args)
+      console.error(
+        "Error getting hookdeck.config.js. Using standard middleware..."
+      );
+      return f.apply(this, args);
     }
     try {
       const pathname = (request.nextUrl ?? {}).pathname;
 
       // TODO change to regex
-      const matching = config.connections.filter((e: HookdeckConnectionConfig) => e.match_path === pathname);
+      const matching = config.connections.filter(
+        (e: HookdeckConnectionConfig) => e.match_path === pathname
+      );
 
       if (matching.length > 0) {
-        if (typeof request.headers['x-hookdeck-eventid'] !== "string") {
+        if (typeof request.headers["x-hookdeck-eventid"] !== "string") {
           // first call, forward to Hookdeck
-          
+
           // check if there are multiple matches with the same
           // api_key and source_name
 
-          const used = new Map<string,[any]>;
+          const used = new Map<string, [any]>();
 
           for (const result of matching) {
             const api_key = result.api_key || process.env.HOOKDECK_API_KEY;
@@ -43,28 +47,40 @@ export function withHookdeck(config: any, f: Function) {
             array.push(result);
             used[match_key] = array;
           }
-
           const promises: Promise<any>[] = [];
           for (const array of Object.values(used)) {
             const used_connection_ids: string[] = [];
             if ((array as [any]).length > 1) {
-              // If there is more than one similar match, we need the connection_id 
+              // If there is more than one similar match, we need the connection_id
               // to pick out the right connection
               for (const entry of array) {
-                if (!!entry.connection_id && !used_connection_ids.includes(entry.connection_id)) {
+                if (
+                  !!entry.connection_id &&
+                  !used_connection_ids.includes(entry.connection_id)
+                ) {
                   const api_key = entry.api_key || process.env.HOOKDECK_API_KEY;
                   const source_name = entry.source_name;
-                  promises.push(forwardToHookdeck(request, api_key, source_name, entry.connection_id));
+                  promises.push(
+                    forwardToHookdeck(
+                      request,
+                      api_key,
+                      source_name,
+                      entry.connection_id
+                    )
+                  );
                   used_connection_ids.push(entry.connection_id);
                 }
               }
               if (promises.length === 0) {
-                console.warn('Found indistinguishable source names, could not process', array[0].source_name);
+                console.warn(
+                  "Found indistinguishable source names, could not process",
+                  array[0].source_name
+                );
               }
             } else {
               const api_key = array[0].api_key || process.env.HOOKDECK_API_KEY;
               const source_name = array[0].source_name;
-              promises.push(forwardToHookdeck(request, api_key, source_name))
+              promises.push(forwardToHookdeck(request, api_key, source_name));
             }
           }
 
@@ -77,12 +93,12 @@ export function withHookdeck(config: any, f: Function) {
         console.log("No match... calling user middleware");
         // no match, regular call
       }
-    } catch(e) {
+    } catch (e) {
       // TODO: manage error
       console.error(e);
     }
 
-    return f.apply(this, args)
+    return f.apply(this, args);
   };
 }
 
@@ -93,24 +109,28 @@ type HookdeckConnectionConfig = {
   api_key?: string;
 };
 
-const AUTHENTICATED_ENTRY_POINT = 'https://hkdk.events/';
+const AUTHENTICATED_ENTRY_POINT = "https://hkdk.events/";
 
-
-async function forwardToHookdeck(request: Request, api_key: string, source_name: string, connection_id?: string): Promise<any> {
-  const request_headers = {}
+async function forwardToHookdeck(
+  request: Request,
+  api_key: string,
+  source_name: string,
+  connection_id?: string
+): Promise<any> {
+  const request_headers = {};
   // iterate using forEach because this can be either a Headers object or a plain object
   request.headers.forEach((value, key) => {
-    if (!key.startsWith('x-vercel-')) {
+    if (!key.startsWith("x-vercel-")) {
       request_headers[key] = value;
     }
   });
 
   const headers = {
     ...request_headers,
-    'connection': 'close',
-    'x-hookdeck-api-key': api_key,
-    'x-hookdeck-source-name': source_name,
-  }
+    connection: "close",
+    "x-hookdeck-api-key": api_key,
+    "x-hookdeck-source-name": source_name,
+  };
   // TODO:     'x-hookdeck-connection-id': connection_id
 
   // TODO: assumed string body
@@ -122,7 +142,7 @@ async function forwardToHookdeck(request: Request, api_key: string, source_name:
   };
 
   if (body) {
-    options['body'] = body;
+    options["body"] = body;
   }
 
   console.log("Forwarding to hookdeck...", options);
