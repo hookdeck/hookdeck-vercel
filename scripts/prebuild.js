@@ -582,6 +582,7 @@ async function checkPrebuild() {
           );
         } else {
           connection = await autoCreateConnection(api_key, conn_config);
+          created_connections_pseudo_keys[pseudo_key] = connection.id;
 
           // let shouldCreateConnection = false;
           // let source = await getSourceByName(api_key, conn_config.source_name);
