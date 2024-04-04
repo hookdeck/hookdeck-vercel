@@ -10,9 +10,8 @@ export function withHookdeck(config: any, f: Function) {
     try {
       const pathname = (request.nextUrl ?? {}).pathname;
 
-      // TODO change to regex
       const matching = config.connections.filter(
-        (e: HookdeckConnectionConfig) => e.match_path === pathname
+        (e: HookdeckConnectionConfig) => (pathname.match(e.match_path) ?? []).length > 0
       );
 
       if (matching.length > 0) {
