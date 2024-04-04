@@ -82,7 +82,11 @@ export function withHookdeck(config: any, f: Function) {
               promises.push(forwardToHookdeck(request, api_key, source_name));
             }
           }
-
+          if (promises.length === 0) {
+            // we can't continue here, as there is no valid connection to use
+            return new Response("withHookdeck: match_path matched, but no valid connection was found", {status: 404});
+          }
+          // If several promises were fullfilled, return the first one as required by the middleware definition
           return Promise.all(promises).then((val) => val[0]);
         } else {
           console.log("Hookdeck's return... calling user middleware");
@@ -93,8 +97,10 @@ export function withHookdeck(config: any, f: Function) {
         // no match, regular call
       }
     } catch (e) {
-      // TODO: manage error
+      // If an error is thrown here, it's better not to continue
+      // with default middleware function, as it could lead to more errors
       console.error(e);
+      return new Response(JSON.stringify(e), {status: 500});
     }
 
     return f.apply(this, args);

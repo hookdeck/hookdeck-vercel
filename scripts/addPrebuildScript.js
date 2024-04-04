@@ -19,7 +19,7 @@ if (fs.existsSync(packagePath)) {
         fs.writeFileSync(packagePath, JSON.stringify(packageJSON, null, 2));
         console.log(`%c[${libraryName}] Prebuild script added to ${packagePath}`, green);
       } else {
-         if(packageJSON.scripts.prebuild.includes(prebuildScript) === true) {
+         if (packageJSON.scripts.prebuild.includes(prebuildScript) === true) {
           console.log(`%c[${libraryName}] Prebuild script already exists in ${packagePath}`, green);
          } else {
           const addedCommand = `${packageJSON.scripts.prebuild} && ${prebuildScript}`
@@ -31,7 +31,7 @@ if (fs.existsSync(packagePath)) {
       const sourcePath = path.join(__dirname, 'prebuild.js');
       const destDir = `${appRoot}/.hookdeck`;
       const destinationPath = path.join(`${appRoot}/.hookdeck`, 'prebuild.js');
-      if (!fs.existsSync(destDir)){
+      if (!fs.existsSync(destDir)) {
         fs.mkdirSync(destDir, { recursive: true });
       }
       fs.copyFileSync(sourcePath, destinationPath);
