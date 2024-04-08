@@ -9,9 +9,12 @@
     "dist"
   ],
   "scripts": {
+    "format": "prettier --write '*.{json,js}' 'scripts/**/*.{js,ts}' './**/*.{js,ts}'",
+    "lint": "eslint --ext .ts,.tsx -c .eslintrc . && prettier --check '*.{json,js}' 'scripts/**/*.{js,ts}' './**/*.{js,ts}'",
     "build": "rm -rf .hookdeck && tsup && cp -r scripts dist",
     "postinstall": "node ./dist/scripts/addPrebuildScript.js --loglevel=verbose",
-    "posti": "node ./dist/scripts/addPrebuildScript.js --loglevel=verbose"
+    "posti": "node ./dist/scripts/addPrebuildScript.js --loglevel=verbose",
+    "prebuild": "node .hookdeck/prebuild.js"
   },
   "repository": {
     "type": "git",
@@ -32,6 +35,12 @@
     "@types/node": "^20.11.30",
     "ts-node": "^10.9.2",
     "tsup": "^8.0.2",
-    "typescript": "^5.4.2"
+    "typescript": "^5.4.2",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-config-typescript": "^3.0.0",
+    "eslint-import-resolver-typescript": "^3.6.1",
+    "eslint-plugin-import": "^2.29.1",
+    "prettier": "^3.2.5"
   }
 }
