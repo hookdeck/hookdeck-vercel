@@ -32,7 +32,6 @@ module.exports = {
       limit: 100,
       period: 'minute',
     },
-    url: '',
     http_method: '',
     auth_method: {},
   },
