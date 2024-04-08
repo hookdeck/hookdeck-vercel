@@ -9,9 +9,11 @@ export function withHookdeck(config: any, f: Function) {
     }
     try {
       const pathname = (request.nextUrl ?? {}).pathname;
+      const arr = pathname.split('&');
+      const cleanPath = arr[0];
 
       const matching = config.connections.filter(
-        (e: HookdeckConnectionConfig) => (pathname.match(e.match_path) ?? []).length > 0
+        (e: HookdeckConnectionConfig) => (cleanPath.match(e.match_path) ?? []).length > 0
       );
 
       if (matching.length > 0) {
