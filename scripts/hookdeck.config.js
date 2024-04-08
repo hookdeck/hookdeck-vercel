@@ -3,10 +3,9 @@
 module.exports = {
   '<source_name>': {
     match: '',
+
+    // all fields below this line are optional:
     host: '',
-    // all fields are optional below this line:
-    api_key: '',
-    id: '',
     retry: {
       strategy: 'exponential',
       count: 0,
@@ -23,11 +22,10 @@ module.exports = {
       },
     ],
     // source configuration
-    allowed_http_methods: [],
     custom_response: {},
     verification: {},
     // destination configuration
-    path_forwarding_disabled: false,
+    url: '',
     delivery_rate: {
       limit: 100,
       period: 'minute',
