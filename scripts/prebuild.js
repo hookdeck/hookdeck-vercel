@@ -1,15 +1,15 @@
-const appRoot = require("app-root-path");
-const fs = require("fs");
-const { customAlphabet } = require("nanoid");
-const path = require("path");
-const { exit } = require("process");
-const hookdeckConfig = require("../hookdeck.config");
+const appRoot = require('app-root-path');
+const fs = require('fs');
+const { customAlphabet } = require('nanoid');
+const path = require('path');
+const { exit } = require('process');
+const hookdeckConfig = require('../hookdeck.config');
 
-const LIBRARY_NAME = "vercel-integration-demo";
-const WRAPPER_NAME = "withHookdeck";
-const TUTORIAL_URL = "https://hookdeck.com/docs";
-const API_VERSION = "2024-03-01";
-const HOOKDECK_API_URL = "https://api.hookdeck.com";
+const LIBRARY_NAME = 'vercel-integration-demo';
+const WRAPPER_NAME = 'withHookdeck';
+const TUTORIAL_URL = 'https://hookdeck.com/docs';
+const API_VERSION = '2024-03-01';
+const HOOKDECK_API_URL = 'https://api.hookdeck.com';
 
 async function checkPrebuild() {
   try {
@@ -17,7 +17,7 @@ async function checkPrebuild() {
 
     if (!hookdeckConfig) {
       console.error(
-        `Usage of ${LIBRARY_NAME} detected but hookdeck.config.js could not be imported. Please follow the steps in ${TUTORIAL_URL} to export the hookdeckConfig object`
+        `Usage of ${LIBRARY_NAME} detected but hookdeck.config.js could not be imported. Please follow the steps in ${TUTORIAL_URL} to export the hookdeckConfig object`,
       );
       return false;
     }
@@ -25,8 +25,8 @@ async function checkPrebuild() {
     const connections = Object.entries(hookdeckConfig).map((e) => {
       const source_name = e[0];
       const conn = e[1];
-      return Object.assign(conn, { source_name })
-    })
+      return Object.assign(conn, { source_name });
+    });
 
     const validConfigFileResult = validateConfig(connections);
     if (!validConfigFileResult.ok) {
@@ -34,7 +34,7 @@ async function checkPrebuild() {
       return false;
     }
 
-    console.log("hookdeck.config.js validated successfully");
+    console.log('hookdeck.config.js validated successfully');
 
     const env_configs = [];
     const created_connections_pseudo_keys = {};
@@ -42,14 +42,12 @@ async function checkPrebuild() {
       const api_key = conn_config.api_key ?? process.env.HOOKDECK_API_KEY;
       if (!api_key) {
         console.error(
-          `Hookdeck's API key doesn't found. You must set it as a env variable named HOOKDECK_API_KEY or include it in your hookdeck.config.js. Check ${TUTORIAL_URL} for more info.`
+          `Hookdeck's API key doesn't found. You must set it as a env variable named HOOKDECK_API_KEY or include it in your hookdeck.config.js. Check ${TUTORIAL_URL} for more info.`,
         );
         return false;
       }
       if (!isString(api_key) || api_key.trim().length === 0) {
-        console.error(
-          `Invalid Hookdeck API KEY format. Check ${TUTORIAL_URL} for more info.`
-        );
+        console.error(`Invalid Hookdeck API KEY format. Check ${TUTORIAL_URL} for more info.`);
         return false;
       }
 
@@ -61,13 +59,12 @@ async function checkPrebuild() {
       } else {
         // avoid creting identical connections
         const pseudo_key = `${api_key}*${conn_config.source_name}*${conn_config.url}`;
-        const cached_connection_id =
-          created_connections_pseudo_keys[pseudo_key] || null;
-          
+        const cached_connection_id = created_connections_pseudo_keys[pseudo_key] || null;
+
         if (cached_connection_id !== null) {
           connection = await updateConnection(
             api_key,
-            Object.assign({ connection_id: cached_connection_id }, conn_config)
+            Object.assign({ connection_id: cached_connection_id }, conn_config),
           );
         } else {
           connection = await autoCreateConnection(api_key, conn_config);
@@ -79,18 +76,15 @@ async function checkPrebuild() {
         config: conn_config,
       });
 
-      console.log(
-        "Hookdeck connection configured successfully",
-        connection.source.url
-      );
+      console.log('Hookdeck connection configured successfully', connection.source.url);
     }
 
     saveCurrentConfig({ connections: env_configs });
 
-    console.log("Hookdeck successfully configured");
+    console.log('Hookdeck successfully configured');
     return true;
   } catch (error) {
-    console.error("Error:", error);
+    console.error('Error:', error);
     return false;
   }
 }
@@ -99,9 +93,8 @@ if (!checkPrebuild()) {
   exit(1);
 }
 
-
-function generateId(prefix = "") {
-  const ID_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyz";
+function generateId(prefix = '') {
+  const ID_ALPHABET = '0123456789abcdefghijklmnopqrstuvwxyz';
   const ID_length = 16;
 
   const nanoid = customAlphabet(ID_ALPHABET, ID_length);
@@ -109,29 +102,24 @@ function generateId(prefix = "") {
 }
 
 function isValidPropertyValue(propValue) {
-  return !(
-    propValue === undefined ||
-    propValue === null ||
-    !isString(propValue)
-  );
+  return !(propValue === undefined || propValue === null || !isString(propValue));
 }
 
 function isString(str) {
-  return typeof str === "string" || str instanceof String;
+  return typeof str === 'string' || str instanceof String;
 }
 
 function validateConfig(connections) {
-
   let valid = true;
   let msgs = [];
-  const string_props = ["source_name", "match", "host"];
+  const string_props = ['source_name', 'match', 'host'];
   let index = 0;
 
   for (const conn of connections) {
     for (const prop of string_props) {
       if (!isValidPropertyValue(conn[prop])) {
         msgs.push(
-          `hookdeck.config[${conn.source_name}]: Undefined or invalid value for key ${prop} in configuration file at hookdeck.config.js`
+          `hookdeck.config[${conn.source_name}]: Undefined or invalid value for key ${prop} in configuration file at hookdeck.config.js`,
         );
         valid = false;
       }
@@ -141,37 +129,40 @@ function validateConfig(connections) {
 
   return {
     ok: valid,
-    msg: msgs.join(", "),
+    msg: msgs.join(', '),
   };
 }
 
-async function autoCreateConnection(
-  api_key,
-  config
-) {
+async function autoCreateConnection(api_key, config) {
   let data = {
-    source: Object.assign({
-      description: "Autogenerated from Vercel integration",
-      name:config.source_name,
-    }, config.source_config || {}),
-    destination: Object.assign({
-      description: "Autogenerated from Vercel integration",
-      url: config.url,
-      name: generateId('dst-'),
-    }, config.destination_config || {}),
+    source: Object.assign(
+      {
+        description: 'Autogenerated from Vercel integration',
+        name: config.source_name,
+      },
+      config.source_config || {},
+    ),
+    destination: Object.assign(
+      {
+        description: 'Autogenerated from Vercel integration',
+        url: config.url,
+        name: generateId('dst-'),
+      },
+      config.destination_config || {},
+    ),
     rules: config.rules || [],
-    description: "Autogenerated from Vercel integration",
+    description: 'Autogenerated from Vercel integration',
   };
   try {
     const url = `${HOOKDECK_API_URL}/${API_VERSION}/connections`;
     const response = await fetch(url, {
       method: 'PUT',
-      mode: "cors",
+      mode: 'cors',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
         Authorization: `Bearer ${api_key}`,
       },
-      credentials: "include",
+      credentials: 'include',
       body: JSON.stringify(data),
     });
     if (response.status !== 200) {
@@ -179,7 +170,7 @@ async function autoCreateConnection(
       return null;
     }
     const json = await response.json();
-    console.log("Connection created", json);
+    console.log('Connection created', json);
     return json;
   } catch (e) {
     manageError(e);
@@ -195,16 +186,14 @@ function manageResponseError(response, isFromHookdeck = true) {
   switch (response.status) {
     case 401:
       console.error(
-        `Invalid or expired ${
-          isFromHookdeck ? "hookdeck api_key" : "vercel token"
-        }`,
+        `Invalid or expired ${isFromHookdeck ? 'hookdeck api_key' : 'vercel token'}`,
         response.status,
-        response.statusText
+        response.statusText,
       );
       break;
 
     default:
-      console.error("Error", response.status, response.statusText);
+      console.error('Error', response.status, response.statusText);
       break;
   }
   process.exit(1);
@@ -218,12 +207,12 @@ function saveCurrentConfig(config) {
     const connections = Object.entries(config).map((e) => {
       const source_name = e[0];
       const val = e[1];
-      return Object.assign(val, {source_name:source_name, id: e.connection.id})
-    })
-   
+      return Object.assign(val, { source_name: source_name, id: e.connection.id });
+    });
+
     const content = JSON.stringify({ connections }, null, 2);
     const text = `module.exports = ${content};`;
-    fs.writeFileSync(destinationPath, text, "utf-8");
+    fs.writeFileSync(destinationPath, text, 'utf-8');
   } catch (e) {
     manageError(e);
   }
@@ -232,32 +221,26 @@ function saveCurrentConfig(config) {
   // This is actually not needed for the wrapper to work
   try {
     const destDir = `${appRoot}/.hookdeck`;
-    const destinationPath = path.join(
-      `${appRoot}/.hookdeck`,
-      "hookdeck.current.json"
-    );
+    const destinationPath = path.join(`${appRoot}/.hookdeck`, 'hookdeck.current.json');
 
     if (!fs.existsSync(path)) {
       fs.mkdirSync(destDir, { recursive: true });
     }
     const json = JSON.stringify(config, null, 2);
-    fs.writeFileSync(destinationPath, json, "utf-8");
+    fs.writeFileSync(destinationPath, json, 'utf-8');
   } catch (e) {
     manageError(e);
   }
 }
 
 function readMiddlewareFile(basePath) {
-  const extensions = ["js", "mjs", "ts"]; // Add more if needed
+  const extensions = ['js', 'mjs', 'ts']; // Add more if needed
   for (let ext of extensions) {
     const filePath = `${basePath}.${ext}`;
     try {
-      const middlewareSourceCode = fs.readFileSync(filePath, "utf-8");
+      const middlewareSourceCode = fs.readFileSync(filePath, 'utf-8');
       if (middlewareSourceCode) {
-        const purgedCode = middlewareSourceCode.replace(
-          /(\/\*[^*]*\*\/)|(\/\/[^*]*)/g,
-          ""
-        ); // removes al comments. May mess with http:// bars but doesn't matter here.
+        const purgedCode = middlewareSourceCode.replace(/(\/\*[^*]*\*\/)|(\/\/[^*]*)/g, ''); // removes al comments. May mess with http:// bars but doesn't matter here.
         if (purgedCode.length > 0) {
           return purgedCode;
         } else {
@@ -276,7 +259,7 @@ function validateMiddleware() {
   const middlewareSourceCode = readMiddlewareFile(`${appRoot}/middleware`);
   if (!middlewareSourceCode) {
     console.warn(
-      `Middleware file not found. Consider removing ${LIBRARY_NAME} from your dev dependencies if you are not using it.`
+      `Middleware file not found. Consider removing ${LIBRARY_NAME} from your dev dependencies if you are not using it.`,
     );
     return;
   }
@@ -288,7 +271,7 @@ function validateMiddleware() {
   if (!hasLibraryName || !hasWrapper) {
     // If it's not being used, just shows a warning
     console.warn(
-      `Usage of ${LIBRARY_NAME} not found in the middleware file. Consider removing ${LIBRARY_NAME} from your dev dependencies if you are not using it.`
+      `Usage of ${LIBRARY_NAME} not found in the middleware file. Consider removing ${LIBRARY_NAME} from your dev dependencies if you are not using it.`,
     );
   } else {
     console.log(`Usage of ${LIBRARY_NAME} detected`);
@@ -297,55 +280,53 @@ function validateMiddleware() {
 
 async function updateConnection(api_key, config) {
   const rules = [];
-  if((config.retry || null) !== null && config.retry.constructor === Object) {
+  if ((config.retry || null) !== null && config.retry.constructor === Object) {
     const target = config.retry;
-    rules.push(Object.assign(target, { type: 'retry'}));
+    rules.push(Object.assign(target, { type: 'retry' }));
   }
-  if((config.delay || null) !== null && isNaN(config.delay) === false) {
+  if ((config.delay || null) !== null && isNaN(config.delay) === false) {
     rules.push({ type: 'delay', delay: config.delay });
   }
-  if((config.alert || null) !== null && typeof config.alert === 'string' || config.alert instanceof String) {
+  if (
+    ((config.alert || null) !== null && typeof config.alert === 'string') ||
+    config.alert instanceof String
+  ) {
     rules.push({ type: 'alert', strategy: config.alert });
   }
-  if((config.filters || null !== null && Array.isArray(config.filters))) {
-    for (const filter of config.filters.map((e) =>
-      Object.assign(e, { type: "filter" })
-    )) {
+  if (config.filters || (null !== null && Array.isArray(config.filters))) {
+    for (const filter of config.filters.map((e) => Object.assign(e, { type: 'filter' }))) {
       rules.push(filter);
     }
   }
   const data = {};
-  if(rules.length > 0) {
-    data["rules"] = rules;
+  if (rules.length > 0) {
+    data['rules'] = rules;
   }
   try {
     const url = `${HOOKDECK_API_URL}/${API_VERSION}/connections/${config.id}`;
     const response = await fetch(url, {
-      method: "PUT",
-      mode: "cors",
+      method: 'PUT',
+      mode: 'cors',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
         Authorization: `Bearer ${api_key}`,
       },
-      credentials: "include",
+      credentials: 'include',
       body: JSON.stringify(data),
     });
     if (response.status !== 200) {
-      console.error(
-        "Error while updating connection with ID",
-        config.id
-      );
+      console.error('Error while updating connection with ID', config.id);
       manageResponseError(response);
       return null;
     }
     const json = await response.json();
-    console.log("Connection updated", json);
+    console.log('Connection updated', json);
 
     // Updates configurations if neeeded
     if (
       (config.allowed_http_methods || null) !== null ||
       (config.custom_response || null) !== null ||
-      (config.verification || null) !== null 
+      (config.verification || null) !== null
     ) {
       const source_id = json.source.id;
       await updateSource(api_key, source_id, config);
@@ -354,7 +335,7 @@ async function updateConnection(api_key, config) {
     if (
       config.path_forwarding_disabled !== null ||
       (config.http_method || null) !== null ||
-      (config.auth_method || null) !== null 
+      (config.auth_method || null) !== null
     ) {
       const destination_id = json.destination.id;
       await updateDestination(api_key, destination_id, config);
@@ -366,75 +347,61 @@ async function updateConnection(api_key, config) {
   }
 }
 
-
-
 async function updateSource(api_key, id, config) {
   const data = {};
-  if (
-    (config.allowed_http_methods || null) !== null
-  ) {
+  if ((config.allowed_http_methods || null) !== null) {
     data.allowed_http_methods = config.allowed_http_methods;
   }
-  if (
-    (config.custom_response || null) !== null
-  ) {
+  if ((config.custom_response || null) !== null) {
     data.custom_response = config.custom_response;
   }
-  if (
-    (config.verification || null) !== null 
-  ) {
+  if ((config.verification || null) !== null) {
     data.verification = config.verification;
   }
-  
+
   const url = `${HOOKDECK_API_URL}/${API_VERSION}/sources/${id}`;
   const response = await fetch(url, {
-    method: "PUT",
-    mode: "cors",
+    method: 'PUT',
+    mode: 'cors',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       Authorization: `Bearer ${api_key}`,
     },
-    credentials: "include",
+    credentials: 'include',
     body: JSON.stringify(data),
   });
   if (response.status !== 200) {
-    throw(`Error while updating source with ID ${id}`);
+    throw `Error while updating source with ID ${id}`;
   }
   const json = await response.json();
-  console.log("Source updated", json);
+  console.log('Source updated', json);
 }
 
 async function updateDestination(api_key, id, config) {
   const data = {};
-  if (
-    config.path_forwarding_disabled !== null
-  ) {
+  if (config.path_forwarding_disabled !== null) {
     data.path_forwarding_disabled = config.path_forwarding_disabled;
   }
-  if (
-    (config.http_method || null) !== null
-  ) {
+  if ((config.http_method || null) !== null) {
     data.http_method = config.http_method;
   }
-  if (
-    (config.auth_method || null) !== null 
-  ) {
+  if ((config.auth_method || null) !== null) {
     data.auth_method = config.auth_method;
   }
   const url = `${HOOKDECK_API_URL}/${API_VERSION}/destinations/${id}`;
   const response = await fetch(url, {
-    method: "PUT",
-    mode: "cors",
+    method: 'PUT',
+    mode: 'cors',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       Authorization: `Bearer ${api_key}`,
     },
-    credentials: "include",
+    credentials: 'include',
     body: JSON.stringify(data),
   });
   if (response.status !== 200) {
-    throw(`Error while updating destination with ID ${id}`);
+    throw `Error while updating destination with ID ${id}`;
   }
   const json = await response.json();
-  console.log("Destination updated", json);
+  console.log('Destination updated', json);
 }
