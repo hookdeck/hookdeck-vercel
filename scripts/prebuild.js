@@ -349,9 +349,9 @@ async function updateConnection(api_key, config) {
 
 async function updateSource(api_key, id, config) {
   const data = {};
-  if ((config.allowed_http_methods || null) !== null) {
-    data.allowed_http_methods = config.allowed_http_methods;
-  }
+
+  data.allowed_http_methods = config.allowed_http_methods || ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
+
   if ((config.custom_response || null) !== null) {
     data.custom_response = config.custom_response;
   }
