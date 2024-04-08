@@ -12,8 +12,14 @@ export function withHookdeck(config: any, f: Function) {
       const arr = pathname.split('&');
       const cleanPath = arr[0];
 
-      const matching = config.connections.filter(
-        (e: HookdeckConnectionConfig) => (cleanPath.match(e.match_path) ?? []).length > 0
+      const connections = Object.entries(config).map((e) => {
+        const source_name = e[0];
+        const conn = e[1] as HookdeckConnectionConfig;
+        return Object.assign(conn, { source_name })
+      })
+
+      const matching = connections.filter(
+        (e: HookdeckConnectionConfig) => (cleanPath.match(e["match"]) ?? []).length > 0
       );
 
       if (matching.length > 0) {
@@ -56,8 +62,8 @@ export function withHookdeck(config: any, f: Function) {
               // to pick out the right connection
               for (const entry of array) {
                 if (
-                  !!entry.connection_id &&
-                  !used_connection_ids.includes(entry.connection_id)
+                  !!entry.id &&
+                  !used_connection_ids.includes(entry.id)
                 ) {
                   const api_key = entry.api_key || process.env.HOOKDECK_API_KEY;
                   const source_name = entry.source_name;
@@ -66,10 +72,10 @@ export function withHookdeck(config: any, f: Function) {
                       request,
                       api_key,
                       source_name,
-                      entry.connection_id
+                      entry.id
                     )
                   );
-                  used_connection_ids.push(entry.connection_id);
+                  used_connection_ids.push(entry.id);
                 }
               }
               if (promises.length === 0) {
@@ -111,9 +117,10 @@ export function withHookdeck(config: any, f: Function) {
 
 type HookdeckConnectionConfig = {
   source_name: string;
-  destination_url: string;
-  match_path: string;
+  host:string,
+  match: string;
   api_key?: string;
+  url?: string;
 };
 
 const AUTHENTICATED_ENTRY_POINT = "https://hkdk.events/";
