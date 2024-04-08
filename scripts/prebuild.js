@@ -72,7 +72,7 @@ async function checkPrebuild() {
         }
       }
       env_configs.push({
-        connection: connection,
+        connection,
         config: conn_config,
       });
 
@@ -112,7 +112,7 @@ function isString(str) {
 function validateConfig(connections) {
   let valid = true;
   let msgs = [];
-  const string_props = ['source_name', 'match', 'host'];
+  const string_props = ['source_name', 'match'];
   let index = 0;
 
   for (const conn of connections) {
@@ -204,35 +204,22 @@ function manageResponseError(response, isFromHookdeck = true) {
   process.exit(1);
 }
 
-function saveCurrentConfig(config) {
+function saveCurrentConfig({ connections }) {
   // Updates the hookdeck.config.js file with the current connection ids
   try {
     const destinationPath = path.join(`${appRoot}`, `hookdeck.config.js`);
 
-    const connections = Object.entries(config).map((e) => {
-      const source_name = e[0];
-      const val = e[1];
-      return Object.assign(val, { source_name: source_name, id: e.connection.id });
-    });
+    const hookdeckConfig = connections.map((conn) => (
+      Object.assign(conn, {
+        source_name: conn.config.source_name, 
+        id: conn.connection.id,
+      })
+    ));
 
-    const content = JSON.stringify({ connections }, null, 2);
+    const content = JSON.stringify({ connections: hookdeckConfig }, null, 2);
     const text = `module.exports = ${content};`;
     fs.writeFileSync(destinationPath, text, 'utf-8');
-  } catch (e) {
-    manageError(e);
-  }
-
-  // Save the current config to a file just for debugging and information purposes.
-  // This is actually not needed for the wrapper to work
-  try {
-    const destDir = `${appRoot}/.hookdeck`;
-    const destinationPath = path.join(`${appRoot}/.hookdeck`, 'hookdeck.current.json');
-
-    if (!fs.existsSync(path)) {
-      fs.mkdirSync(destDir, { recursive: true });
-    }
-    const json = JSON.stringify(config, null, 2);
-    fs.writeFileSync(destinationPath, json, 'utf-8');
+    console.log('Saved hookdeck.config.js', text);
   } catch (e) {
     manageError(e);
   }
