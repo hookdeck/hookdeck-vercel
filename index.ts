@@ -26,7 +26,7 @@ export function withHookdeck(config: any, f: Function) {
           // single source
           const api_key = matching[0].api_key || process.env.HOOKDECK_API_KEY;
           const source_name = matching[0].source_name;
-          return forwardToHookdeck(request, api_key, source_name);
+          return forwardToHookdeck(request, api_key, source_name, pathname);
       }
 
       // multiple sources: check if there are multiple matches with the same api_key and source_name
@@ -67,7 +67,7 @@ export function withHookdeck(config: any, f: Function) {
             if (!!entry.id && !used_connection_ids.includes(entry.id)) {
               const api_key = entry.api_key || process.env.HOOKDECK_API_KEY;
               const source_name = entry.source_name;
-              promises.push(forwardToHookdeck(request, api_key, source_name));
+              promises.push(forwardToHookdeck(request, api_key, source_name, pathname));
               used_connection_ids.push(entry.id);
             }
           }
@@ -91,12 +91,13 @@ export function withHookdeck(config: any, f: Function) {
   };
 }
 
-const AUTHENTICATED_ENTRY_POINT = 'https://hkdk.events/';
+const AUTHENTICATED_ENTRY_POINT = 'https://hkdk.events';
 
 async function forwardToHookdeck(
   request: Request,
   api_key: string,
-  source_name: string
+  source_name: string,
+  pathname:string,
 ): Promise<any> {
   const request_headers = {};
   // iterate using forEach because this can be either a Headers object or a plain object
@@ -128,5 +129,5 @@ async function forwardToHookdeck(
 
   console.log(`Forwarding to hookdeck (${!!body ? 'with' : 'without'} body)...`, options);
 
-  return fetch(AUTHENTICATED_ENTRY_POINT, options);
+  return fetch(`${AUTHENTICATED_ENTRY_POINT}${pathname}`, options);
 }
