@@ -155,10 +155,7 @@ function getConnectionRules(config) {
   if ((config.delay || null) !== null && isNaN(config.delay) === false) {
     rules.push({ type: 'delay', delay: config.delay });
   }
-  if (
-    typeof (config.alert || null) === 'string' ||
-    config.alert instanceof String
-  ) {
+  if (typeof (config.alert || null) === 'string' || config.alert instanceof String) {
     // 'each_attempt' or 'last_attempt'
     rules.push({ type: 'alert', strategy: config.alert });
   }
@@ -288,12 +285,12 @@ function saveCurrentConfig({ connections }) {
     const destinationPath = path.join(`${appRoot}`, `hookdeck.config.js`);
 
     const updated_config = {};
-    for(const conn of connections) {
+    for (const conn of connections) {
       updated_config[conn.config.source_name] = Object.assign(conn.config, {
         id: conn.connection.id,
         source_id: conn.connection.source.id,
         destination_id: conn.connection.destination.id,
-      })
+      });
     }
 
     const content = JSON.stringify(updated_config, null, 2);
@@ -405,7 +402,13 @@ async function updateConnection(api_key, config) {
 async function updateSource(api_key, id, config) {
   const data = {};
 
-  data.allowed_http_methods = config.allowed_http_methods || ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
+  data.allowed_http_methods = config.allowed_http_methods || [
+    'GET',
+    'POST',
+    'PUT',
+    'PATCH',
+    'DELETE',
+  ];
 
   if ((config.custom_response || null) !== null) {
     data.custom_response = config.custom_response;

@@ -10,10 +10,9 @@ export function withHookdeck(config: any, f: Function) {
       const cleanPath = pathname.split('&')[0];
 
       const connections = Object.values(config).map((e) => e as any);
-      const matching = connections
-        .filter(
-          (conn_config) => (cleanPath.match(conn_config['match']) ?? []).length > 0,
-        );
+      const matching = connections.filter(
+        (conn_config) => (cleanPath.match(conn_config['match']) ?? []).length > 0,
+      );
 
       if (matching.length === 0) {
         console.log('No match... calling user middleware');
@@ -23,10 +22,10 @@ export function withHookdeck(config: any, f: Function) {
       // Forward to Hookdeck
 
       if (matching.length === 1) {
-          // single source
-          const api_key = matching[0].api_key || process.env.HOOKDECK_API_KEY;
-          const source_name = matching[0].source_name;
-          return forwardToHookdeck(request, api_key, source_name, pathname);
+        // single source
+        const api_key = matching[0].api_key || process.env.HOOKDECK_API_KEY;
+        const source_name = matching[0].source_name;
+        return forwardToHookdeck(request, api_key, source_name, pathname);
       }
 
       // multiple sources: check if there are multiple matches with the same api_key and source_name
@@ -97,7 +96,7 @@ async function forwardToHookdeck(
   request: Request,
   api_key: string,
   source_name: string,
-  pathname:string,
+  pathname: string,
 ): Promise<any> {
   const request_headers = {};
   // iterate using forEach because this can be either a Headers object or a plain object
