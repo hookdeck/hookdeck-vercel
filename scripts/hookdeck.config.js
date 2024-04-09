@@ -21,6 +21,11 @@ module.exports = {
         path: {},
       },
     ],
+    transformation: {
+      name: '',
+      code: '',
+      env: {},
+    },
     // source configuration
     custom_response: {},
     verification: {},
