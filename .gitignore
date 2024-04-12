@@ -1,3 +1,6 @@
+.hookdeck/
+hookdeck.config.js
+
 # Logs
 logs
 *.log
