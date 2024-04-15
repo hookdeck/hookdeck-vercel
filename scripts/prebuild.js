@@ -17,7 +17,7 @@ async function checkPrebuild() {
     validateMiddleware();
 
     if (!hookdeckConfig) {
-      console.error(
+      console.warn(
         `Usage of ${LIBRARY_NAME} detected but hookdeck.config.js could not be imported. Please follow the steps in ${TUTORIAL_URL} to export the hookdeckConfig object`,
       );
       return false;
@@ -31,7 +31,7 @@ async function checkPrebuild() {
 
     const validConfigFileResult = validateConfig(connections);
     if (!validConfigFileResult.ok) {
-      console.error(validConfigFileResult.msg);
+      console.warn(validConfigFileResult.msg);
       return false;
     }
 
@@ -42,13 +42,13 @@ async function checkPrebuild() {
     for (const conn_config of connections) {
       const api_key = conn_config.api_key || process.env.HOOKDECK_API_KEY;
       if (!api_key) {
-        console.error(
+        console.warn(
           `Hookdeck's API key doesn't found. You must set it as a env variable named HOOKDECK_API_KEY or include it in your hookdeck.config.js. Check ${TUTORIAL_URL} for more info.`,
         );
         return false;
       }
       if (!isString(api_key) || api_key.trim().length === 0) {
-        console.error(`Invalid Hookdeck API KEY format. Check ${TUTORIAL_URL} for more info.`);
+        console.warn(`Invalid Hookdeck API KEY format. Check ${TUTORIAL_URL} for more info.`);
         return false;
       }
 
