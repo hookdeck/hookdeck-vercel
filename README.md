@@ -1,17 +1,29 @@
 # Hookdeck's Vercel Middleware Integration
 
-Using Hookdeck's Vercel middleware integration, you will be able to turn your Vercel's routes into asynchronous endpoints, taking all the advantage of Hookdeck's benefits.
-
 In this quickstart, you'll learn how to integrate Hookdeck seamlessly in your Vercel project. If you are already using URLs of your Vercel project as a webhooks, you don't have to change your code: you will continue receiving the requests, but from Hookdeck (with all the features you may need, such as retries, authentication, transformations, etc).
 
 We will walk you through these steps:
 
+0. Overview and Architecture
 1. Prerequisites
 2. Installation
 3. Configuration
 4. Deploy and Test
 5. Advanced Configuration
 6. Vercel Edge Middleware limitations
+
+## 0. Overview and Architecture
+
+Using Hookdeck's Vercel middleware integration, you will be able to turn your Vercel's routes into asynchronous endpoints, taking all the advantage of Hookdeck's benefits.
+
+This package acts in deploy time, checking a configuration file before your project is built:
+
+![Build time](./img/build_time.jpg)
+
+And acts also in runtime by sending to Hookdeck the requests that matches your configuration:
+
+![Run time](./img/run_time.jpg)
+
 
 ## 1. Prerequisites
 
