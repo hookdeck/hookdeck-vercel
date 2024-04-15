@@ -123,7 +123,7 @@ async function forwardToHookdeck(
   const headers = {
     ...request_headers,
     connection: 'close',
-    'x-hookdeck-api-key': api_key,
+    'authorization': 'Bearer ' + api_key, 
     'x-hookdeck-source-name': source_name,
   };
 
