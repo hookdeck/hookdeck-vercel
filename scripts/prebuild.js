@@ -325,7 +325,8 @@ function readMiddlewareFile(basePath) {
 
 function validateMiddleware() {
   // 1) Check if middleware exists. If not, just shows a warning
-  const middlewareSourceCode = readMiddlewareFile(`${appRoot}/middleware`) || readMiddlewareFile(`${appRoot}/src/middleware`);
+  const middlewareSourceCode =
+    readMiddlewareFile(`${appRoot}/middleware`) || readMiddlewareFile(`${appRoot}/src/middleware`);
   if (!middlewareSourceCode) {
     console.warn(
       `Middleware file not found. Consider removing ${LIBRARY_NAME} from your dev dependencies if you are not using it.`,

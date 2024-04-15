@@ -1,4 +1,4 @@
-import { HookdeckConfig } from "./hookdeck.config";
+import { HookdeckConfig } from './hookdeck.config';
 
 export function withHookdeck(config: HookdeckConfig, f: Function) {
   return function (...args) {
@@ -12,32 +12,33 @@ export function withHookdeck(config: HookdeckConfig, f: Function) {
       const cleanPath = pathname.split('&')[0];
 
       const connections = Object.values(config);
-      const matching = connections
-        .filter(
-          (conn_config) => (cleanPath.match(conn_config.matcher) ?? []).length > 0,
-        );
+      const matching = connections.filter(
+        (conn_config) => (cleanPath.match(conn_config.matcher) ?? []).length > 0,
+      );
 
       if (matching.length === 0) {
         console.log('No match... calling user middleware');
         return f.apply(this, args);
       }
 
-      const contains_proccesed_header = Object.keys(request.headers ?? {}).map((e) => e.toLowerCase()).filter((e) => e === HOOKDECK_PROCESSED_HEADER).length > 0;
+      const contains_proccesed_header =
+        Object.keys(request.headers ?? {})
+          .map((e) => e.toLowerCase())
+          .filter((e) => e === HOOKDECK_PROCESSED_HEADER).length > 0;
 
-      if(contains_proccesed_header) {
+      if (contains_proccesed_header) {
         // TODO: This makes the request to go through middleware twice, affecting Vercel costs!
         console.log('Request already processed by Hookdeck. Redirecting to middleware');
         return f.apply(this, args);
       }
 
-
       // Forward to Hookdeck
 
       if (matching.length === 1) {
-          // single source
-          const api_key = matching[0].api_key || process.env.HOOKDECK_API_KEY;
-          const source_name = matching[0].source_name;
-          return forwardToHookdeck(request, api_key!, source_name!, pathname);
+        // single source
+        const api_key = matching[0].api_key || process.env.HOOKDECK_API_KEY;
+        const source_name = matching[0].source_name;
+        return forwardToHookdeck(request, api_key!, source_name!, pathname);
       }
 
       // multiple sources: check if there are multiple matches with the same api_key and source_name
