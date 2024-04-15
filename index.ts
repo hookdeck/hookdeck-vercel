@@ -20,6 +20,15 @@ export function withHookdeck(config: any, f: Function) {
         return f.apply(this, args);
       }
 
+      const contains_proccesed_header = Object.keys(request.headers ?? {}).map((e) => e.toLowerCase()).filter((e) => e === HOOKDECK_PROCESSED_HEADER).length > 0;
+
+      if(contains_proccesed_header) {
+        // TODO: This makes the request to go through middleware twice, affecting Vercel costs!
+        console.log('Request already processed by Hookdeck. Redirecting to middleware');
+        return f.apply(this, args);
+      }
+
+
       // Forward to Hookdeck
 
       if (matching.length === 1) {
@@ -92,6 +101,7 @@ export function withHookdeck(config: any, f: Function) {
 }
 
 const AUTHENTICATED_ENTRY_POINT = 'https://hkdk.events';
+const HOOKDECK_PROCESSED_HEADER = 'x-hookdeck-aep-processed';
 
 async function forwardToHookdeck(
   request: Request,
@@ -113,7 +123,6 @@ async function forwardToHookdeck(
     'x-hookdeck-api-key': api_key,
     'x-hookdeck-source-name': source_name,
   };
-  // TODO:     'x-hookdeck-connection-id': connection_id
 
   // TODO: assumed string body
   const body = await new Response(request.body).text();
