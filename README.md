@@ -28,13 +28,13 @@ In your Vercel project, open a terminal and add the `vercel-integration-demo` pa
 ### NPM
 
 ```bash
-$ npm install --save-dev vercel-integration-demo
+npm install --save-dev vercel-integration-demo
 ```
 
 ### YARN
 
 ```bash
-$ yarn add --dev vercel-integration-demo
+yarn add --dev vercel-integration-demo
 ```
 
 you can also add the `vercel-integration-demo` package manually to dev dependencies on your `package.json` file.
@@ -45,7 +45,7 @@ you can also add the `vercel-integration-demo` package manually to dev dependenc
 ## 3. Configuration
 
 The `vercel-integration-demo` package is supported in the [Vercel's Edge
-Middleware](https://vercel.com/docs/functions/edge-middleware) code, that executes before a request is processed on your site. This way, the request can be fordwarded to Hookdeck and then received again by your specified endpoint, but with all the extra features you may need from hookdeck such as retry strategies and transformations.
+Middleware](https://vercel.com/docs/functions/edge-middleware) code, that executes before a request is processed on your site. This way, the request can be fordwarded to Hookdeck and then received again by your specified endpoint, but with all the extra features you may need from Hookdeck such as retry strategies and transformations.
 
 If you have not implemented Vercel Edge Middleware, check this [quick start
 guide](https://vercel.com/docs/functions/edge-middleware) to easily integrate into your project.
@@ -72,7 +72,7 @@ to this:
 import { NextFetchEvent } from 'next/server'
 // ... other imports
 
-// add hookdeck imports
+// add Hookdeck imports
 import { withHookdeck } from "vercel-integration-demo";
 import hookdeckConfig from "./hookdeck.config";
 
@@ -85,7 +85,7 @@ function middleware(request: Request, ctx: NextFetchEvent) {
     // ... your middleware logic
 }
 
-// wrap the middleware with hookdeck wrapper
+// wrap the middleware with Hookdeck wrapper
 export default withHookdeck(hookdeckConfig, middleware);
 ```
 
@@ -138,11 +138,10 @@ module.exports = {
 
 This file exports de configuration for one or more sources. If you have configured your Hookdeck API key as an environment variable, then you only need the following fields for your connections:
 
-- `<source_name>`: The name of the source that will receive the request. You don't
-have to create it previously in the Hookdecks dashboard, as the package automatically creates it when necessary.
-- `match`: the matching string or regex that will be tested against the pathname of the url that triggered the middleware. If there is more than one match, then the request is sent to every single source found.
+- `<source_name>` (*key*): The name of the source that will receive the request. You don't have to create it previously in the Hookdecks dashboard, as the package automatically creates it when necessary. Important: spaces are not allowed, use only alphanumeric characters, along with score `-` and underscore `_`.
+- `matcher`: the matching string or regex that will be compared or tested against the pathname of the url that triggered the middleware. If there is more than one match, then the request is sent to every matching source.
 
-> IMPORTANT: if you export a `config` in your `middleware` file, make sure that your middleware's `matcher` configuration includes the routes specified in the Hookdeck's config `match` field. Only routes that match the `matcher` will trigger the middleware, and therefore the `withHookDeck` functionality.
+> IMPORTANT: if you export a `config` in your `middleware` file, make sure that your middleware's `matcher` configuration includes the routes specified in the Hookdeck's `matcher` fields. Only routes that match the `matcher` will trigger the middleware, and therefore the `withHookDeck` functionality.
 
 So the minimum valid content for `hookdeck.config.js` would be something like this:
 
