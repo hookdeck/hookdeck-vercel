@@ -11,6 +11,7 @@ We will walk you through these steps:
 3. Configuration
 4. Deploy and Test
 5. Advanced Configuration
+6. Vercel Edge Middleware limitations
 
 ## 1. Prerequisites
 
@@ -177,3 +178,7 @@ In case of advanced scenarios, you may need any of these configuration keys to u
 - `delivery_rate`: set the contention rate to be used for the outcoming traffic. Check the syntax in the `rate_limit_period` key in the [Destination documentation](https://hookdeck.com/docs/api#destination-object).
 - `http_method`: the HTTP method to use in the outcoming requests. If not specified, the same method will be kept.
 - `auth_method`: outbound (destination) authentication mechanism to use. Check all possible values and syntax in the [Destination documentation](https://hookdeck.com/docs/api#destination-object).
+
+## 6. Vercel Edge Middleware limitations
+
+If you have multiple entries in the config file with the same `matcher`, be aware that the middleware will send the request via `fetch` call once per match and will try to do that in paralell. This heavy use is not a common case, but please check [Edge Middleware Limitations](https://vercel.com/docs/functions/edge-middleware/limitations) if you are in this scenario.
