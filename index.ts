@@ -1,4 +1,6 @@
-export function withHookdeck(config: any, f: Function) {
+import { HookdeckConfig } from "./hookdeck.config";
+
+export function withHookdeck(config: HookdeckConfig, f: Function) {
   return function (...args) {
     const request = args[0];
     if (!config) {
@@ -9,10 +11,10 @@ export function withHookdeck(config: any, f: Function) {
       const pathname = (request.nextUrl ?? {}).pathname;
       const cleanPath = pathname.split('&')[0];
 
-      const connections = Object.values(config).map((e) => e as any);
+      const connections = Object.values(config);
       const matching = connections
         .filter(
-          (conn_config) => (cleanPath.match(conn_config['matcher']) ?? []).length > 0,
+          (conn_config) => (cleanPath.match(conn_config.matcher) ?? []).length > 0,
         );
 
       if (matching.length === 0) {
@@ -32,10 +34,10 @@ export function withHookdeck(config: any, f: Function) {
       // Forward to Hookdeck
 
       if (matching.length === 1) {
-        // single source
-        const api_key = matching[0].api_key || process.env.HOOKDECK_API_KEY;
-        const source_name = matching[0].source_name;
-        return forwardToHookdeck(request, api_key, source_name, pathname);
+          // single source
+          const api_key = matching[0].api_key || process.env.HOOKDECK_API_KEY;
+          const source_name = matching[0].source_name;
+          return forwardToHookdeck(request, api_key!, source_name!, pathname);
       }
 
       // multiple sources: check if there are multiple matches with the same api_key and source_name
