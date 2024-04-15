@@ -113,7 +113,7 @@ function isString(str) {
 function validateConfig(connections) {
   let valid = true;
   let msgs = [];
-  const string_props = ['source_name', 'match'];
+  const string_props = ['source_name', 'matcher'];
   let index = 0;
 
   for (const conn of connections) {
@@ -141,7 +141,7 @@ function getDestinationUrl(config) {
 
 function getConnectionName(config) {
   const dest_url = getDestinationUrl(config);
-  const valueToHash = `${config.source_name}*${dest_url}*${config.match}`;
+  const valueToHash = `${config.source_name}*${dest_url}*${config.matcher}`;
   return createHash('sha256').update(valueToHash).digest('hex');
 }
 

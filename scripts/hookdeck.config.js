@@ -2,7 +2,7 @@
 
 module.exports = {
   '<source_name>': {
-    match: '',
+    matcher: '',
 
     // all fields below this line are optional:
     host: '',

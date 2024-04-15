@@ -96,8 +96,8 @@ The first time you install the `vercel-integration-demo`, a `hookdeck.config.js`
 
 ```javascript
 module.exports = {
-  '<source_name>': {
-    match: '',
+   '<source_name>': {
+    matcher: '',
 
     // all fields below this line are optional:
     host: '',
@@ -147,8 +147,8 @@ So the minimum valid content for `hookdeck.config.js` would be something like th
 
 ```javascript
 module.exports = {
-  'Stripe events': {
-    match: '/api/stripe/',
+   'my-source-name': {
+      matcher: 'foo/bar',
   },
 };
 ```

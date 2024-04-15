@@ -10,9 +10,10 @@ export function withHookdeck(config: any, f: Function) {
       const cleanPath = pathname.split('&')[0];
 
       const connections = Object.values(config).map((e) => e as any);
-      const matching = connections.filter(
-        (conn_config) => (cleanPath.match(conn_config['match']) ?? []).length > 0,
-      );
+      const matching = connections
+        .filter(
+          (conn_config) => (cleanPath.match(conn_config['matcher']) ?? []).length > 0,
+        );
 
       if (matching.length === 0) {
         console.log('No match... calling user middleware');
