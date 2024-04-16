@@ -7,7 +7,8 @@ interface DeliveryRate {
 
 export interface SourceConfig {
   matcher: string;
-  api_key?: string;
+  api_key?: string;         // not recommended, use HOOKDECK_API_KEY instead
+  signing_secret?: string;  // not recommended, use HOOKDECK_SIGNING_SECRET instead
   source_name?: string;
   host?: string;
   retry?: Omit<Hookdeck.RetryRule, 'type'>;

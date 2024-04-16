@@ -1,7 +1,8 @@
 import { HookdeckConfig } from './hookdeck.config';
+import { createHmac } from 'crypto';
 
 export function withHookdeck(config: HookdeckConfig, f: Function) {
-  return function (...args) {
+  return async function (...args) {
     const request = args[0];
     if (!config) {
       console.error('Error getting hookdeck.config.js. Using standard middleware...');
@@ -27,6 +28,26 @@ export function withHookdeck(config: HookdeckConfig, f: Function) {
           .filter((e) => e === HOOKDECK_PROCESSED_HEADER).length > 0;
 
       if (contains_proccesed_header) {
+        // Optional Hookdeck webhook signature verification
+        let verified = true;
+        if (matching.length === 1) {
+          const secret = matching[0].signing_secret || process.env.HOOKDECK_SIGNING_SECRET;
+          verified = await verifyHookdeckSignature(request, secret);
+        } else {
+          verified = false;
+          for (const match of matching) {
+            const secret = match.signing_secret || process.env.HOOKDECK_SIGNING_SECRET;
+            if (await verifyHookdeckSignature(request, secret)) {
+              verified = true;
+            }
+          }
+        }
+        if (!verified) {
+          const msg = "Invalid Hookdeck Signature in request.";
+          console.error(msg);
+          return new Response(msg, { status: 500 });
+        }
+
         // TODO: This makes the request to go through middleware twice, affecting Vercel costs!
         console.log('Request already processed by Hookdeck. Redirecting to middleware');
         return f.apply(this, args);
@@ -104,7 +125,28 @@ export function withHookdeck(config: HookdeckConfig, f: Function) {
 }
 
 const AUTHENTICATED_ENTRY_POINT = 'https://hkdk.events';
-const HOOKDECK_PROCESSED_HEADER = 'x-hookdeck-aep-processed';
+const HOOKDECK_PROCESSED_HEADER = 'x-hookdeck-signature';
+const HOOKDECK_SIGNATURE_HEADER_1 = 'x-hookdeck-signature-1'
+const HOOKDECK_SIGNATURE_HEADER_2 = 'x-hookdeck-signature-2'
+
+async function verifyHookdeckSignature(request, secret: string | undefined): Promise<boolean> {
+  const signature1 = (request.headers ?? {})[HOOKDECK_SIGNATURE_HEADER_1];
+  const signature2 = (request.headers ?? {})[HOOKDECK_SIGNATURE_HEADER_2];
+
+  if (secret && (signature1 || signature2)) {
+    // TODO: assumed string body
+    const body = await new Response(request.body).text();
+
+    const hash = createHmac("sha256", secret)
+      .update(body)
+      .digest("base64");
+
+      return (hash === signature1 || hash === signature2);
+  }
+
+  return true;
+}
+
 
 async function forwardToHookdeck(
   request: Request,
@@ -123,7 +165,8 @@ async function forwardToHookdeck(
   const headers = {
     ...request_headers,
     connection: 'close',
-    authorization: 'Bearer ' + api_key,
+    authorization: `Bearer ${api_key}`,
+    'x-hookdeck-api-key': api_key,   // remove when Bearer is in prod
     'x-hookdeck-source-name': source_name,
   };
 

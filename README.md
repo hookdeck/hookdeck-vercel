@@ -11,6 +11,7 @@ We will walk you through these steps:
 4. Deploy and Test
 5. Advanced Configuration
 6. Vercel Edge Middleware limitations
+7. Webhook signature verification
 
 ## 0. Overview and Architecture
 
@@ -194,3 +195,7 @@ In case of advanced scenarios, you may need any of these configuration keys to u
 ## 6. Vercel Edge Middleware limitations
 
 If you have multiple entries in the config file with the same `matcher`, be aware that the middleware will send the request via `fetch` call once per match and will try to do that in paralell. This heavy use is not a common case, but please check [Edge Middleware Limitations](https://vercel.com/docs/functions/edge-middleware/limitations) if you are in this scenario.
+
+## 7. Webhook signature verification
+
+It is good practice to verify the signature of the requests that arrive at your Middleware. To ensure that the requests processed from Hookdeck are authentic, include your [Signing Secret](https://dashboard.hookdeck.com/settings/project/secrets) as an environment variable in your Vercel project with the name `HOOKDECK_SIGNING_SECRET`
