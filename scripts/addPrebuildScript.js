@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const appRoot = require('app-root-path');
 
-const libraryName = 'vercel-integration-demo';
+const libraryName = '@hookdeck/vercel';
 const prebuildScript = `node .hookdeck/prebuild.js`;
 const green = 'color:green;';
 

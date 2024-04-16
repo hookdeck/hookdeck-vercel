@@ -6,7 +6,7 @@ const { exit } = require('process');
 const hookdeckConfig = require('../hookdeck.config');
 const { createHash } = require('crypto');
 
-const LIBRARY_NAME = 'vercel-integration-demo';
+const LIBRARY_NAME = '@hookdeck/vercel';
 const WRAPPER_NAME = 'withHookdeck';
 const TUTORIAL_URL = 'https://hookdeck.com/docs';
 

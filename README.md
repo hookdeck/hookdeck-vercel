@@ -37,28 +37,28 @@ for your project. The name of the environment variable must be `HOOKDECK_API_KEY
 
 ## 2. Installation
 
-In your Vercel project, open a terminal and add the `vercel-integration-demo` package using your prefered package manager:
+In your Vercel project, open a terminal and add the `@hookdeck/vercel` package using your prefered package manager:
 
 ### NPM
 
 ```bash
-npm install --save-dev vercel-integration-demo
+npm install --save-dev @hookdeck/vercel
 ```
 
 ### YARN
 
 ```bash
-yarn add --dev vercel-integration-demo
+yarn add --dev @hookdeck/vercel
 ```
 
-you can also add the `vercel-integration-demo` package manually to dev dependencies on your `package.json` file.
+you can also add the `@hookdeck/vercel` package manually to dev dependencies on your `package.json` file.
 
-> Once installed the `vercel-integration-demo` package a `hookdeck.config.js` file and a `.hookdeck` directory are created at the root of your project. Also, the command `node .hookdeck/prebuild.js` is appended to the `prebuild` script of your `package.json`.
+> Once installed the `@hookdeck/vercel` package a `hookdeck.config.js` file and a `.hookdeck` directory are created at the root of your project. Also, the command `node .hookdeck/prebuild.js` is appended to the `prebuild` script of your `package.json`.
 
 
 ## 3. Configuration
 
-The `vercel-integration-demo` package is supported in the [Vercel's Edge
+The `@hookdeck/vercel` package is supported in the [Vercel's Edge
 Middleware](https://vercel.com/docs/functions/edge-middleware) code, that executes before a request is processed on your site. This way, the request can be fordwarded to Hookdeck and then received again by your specified endpoint, but with all the extra features you may need from Hookdeck such as retry strategies and transformations.
 
 If you have not implemented Vercel Edge Middleware, check this [quick start
@@ -87,7 +87,7 @@ import { NextFetchEvent } from 'next/server'
 // ... other imports
 
 // add Hookdeck imports
-import { withHookdeck } from "vercel-integration-demo";
+import { withHookdeck } from "@hookdeck/vercel";
 import hookdeckConfig from "./hookdeck.config";
 
 export const config = {
@@ -106,7 +106,7 @@ export default withHookdeck(hookdeckConfig, middleware);
 
 ## 4. Deploy and Test
 
-The first time you install the `vercel-integration-demo`, a `hookdeck.config.js` file is created at your project's root directory with a stub of a configuration
+The first time you install the `@hookdeck/vercel`, a `hookdeck.config.js` file is created at your project's root directory with a stub of a configuration
 
 ```javascript
 module.exports = {
