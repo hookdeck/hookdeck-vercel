@@ -9,8 +9,9 @@ const { createHash } = require('crypto');
 const LIBRARY_NAME = 'vercel-integration-demo';
 const WRAPPER_NAME = 'withHookdeck';
 const TUTORIAL_URL = 'https://hookdeck.com/docs';
-const API_VERSION = '2024-03-01';
-const HOOKDECK_API_URL = 'https://api.hookdeck.com';
+
+const { HookdeckEnvironment } = require('@hookdeck/sdk');
+const API_ENDPOINT = HookdeckEnvironment.Default;
 
 async function checkPrebuild() {
   try {
@@ -112,7 +113,7 @@ function isString(str) {
 
 function validateConfig(connections) {
   let valid = true;
-  let msgs = [];
+  const msgs = [];
   const string_props = ['source_name', 'matcher'];
   let index = 0;
 
@@ -182,7 +183,7 @@ async function autoCreateConnection(api_key, config) {
   const connection_name = getConnectionName(config);
   const dest_url = getDestinationUrl(config);
 
-  let data = {
+  const data = {
     name: connection_name,
     source: Object.assign(
       {
@@ -231,7 +232,7 @@ async function autoCreateConnection(api_key, config) {
   }
 
   try {
-    const url = `${HOOKDECK_API_URL}/${API_VERSION}/connections`;
+    const url = `${API_ENDPOINT}/connections`;
     const response = await fetch(url, {
       method: 'PUT',
       mode: 'cors',
@@ -304,7 +305,7 @@ function saveCurrentConfig({ connections }) {
 
 function readMiddlewareFile(basePath) {
   const extensions = ['js', 'mjs', 'ts']; // Add more if needed
-  for (let ext of extensions) {
+  for (const ext of extensions) {
     const filePath = `${basePath}.${ext}`;
     try {
       const middlewareSourceCode = fs.readFileSync(filePath, 'utf-8');
@@ -356,7 +357,7 @@ async function updateConnection(api_key, config) {
   }
 
   try {
-    const url = `${HOOKDECK_API_URL}/${API_VERSION}/connections/${config.id}`;
+    const url = `${API_ENDPOINT}/connections/${config.id}`;
     const response = await fetch(url, {
       method: 'PUT',
       mode: 'cors',
@@ -418,7 +419,7 @@ async function updateSource(api_key, id, config) {
     data.verification = config.verification;
   }
 
-  const url = `${HOOKDECK_API_URL}/${API_VERSION}/sources/${id}`;
+  const url = `${API_ENDPOINT}/sources/${id}`;
   const response = await fetch(url, {
     method: 'PUT',
     mode: 'cors',
@@ -430,7 +431,7 @@ async function updateSource(api_key, id, config) {
     body: JSON.stringify(data),
   });
   if (response.status !== 200) {
-    throw `Error while updating source with ID ${id}`;
+    throw new Error(`Error while updating source with ID ${id}`);
   }
   const json = await response.json();
   console.log('Source updated', json);
@@ -447,7 +448,7 @@ async function updateDestination(api_key, id, config) {
   if ((config.auth_method || null) !== null) {
     data.auth_method = config.auth_method;
   }
-  const url = `${HOOKDECK_API_URL}/${API_VERSION}/destinations/${id}`;
+  const url = `${API_ENDPOINT}/destinations/${id}`;
   const response = await fetch(url, {
     method: 'PUT',
     mode: 'cors',
@@ -459,7 +460,7 @@ async function updateDestination(api_key, id, config) {
     body: JSON.stringify(data),
   });
   if (response.status !== 200) {
-    throw `Error while updating destination with ID ${id}`;
+    throw new Error(`Error while updating destination with ID ${id}`);
   }
   const json = await response.json();
   console.log('Destination updated', json);
