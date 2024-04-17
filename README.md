@@ -1,6 +1,8 @@
-# Hookdeck's Vercel Middleware Integration
+# Hookdeck Vercel Middleware
 
-In this quickstart, you'll learn how to integrate Hookdeck seamlessly in your Vercel project. If you are already using URLs of your Vercel project as a webhooks, you don't have to change your code: you will continue receiving the requests, but from Hookdeck (with all the features you may need, such as retries, authentication, transformations, etc).
+The Hookdeck Vercel Middleware adds the ability to authenticate, delay, filter, queue, throttle, and retry requests made to a Vercel application.
+
+In this quickstart, you'll learn how to add HTTP request authentication, integrate Hookdeck seamlessly in your Vercel project. If you are already using URLs of your Vercel project as a webhooks, you don't have to change your code: you will continue receiving the requests, but from Hookdeck (with all the features you may need, such as retries, authentication, transformations, etc).
 
 We will walk you through these steps:
 
