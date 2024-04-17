@@ -49,3 +49,31 @@ if (!fs.existsSync(hookdeckConfigPath)) {
 } else {
   console.log('hookdeck.config.js already exists in your project');
 }
+
+function existsMiddlewareFileAt(basePath) {
+  const extensions = ['js', 'mjs', 'ts']; // Add more if needed
+  for (const ext of extensions) {
+    const filePath = `${basePath}.${ext}`;
+    try {
+      const middlewareSourceCode = fs.readFileSync(filePath, 'utf-8');
+      if (middlewareSourceCode) {
+        return true;
+      }
+    } catch (error) {
+      // File does not exist, continue checking the next extension
+    }
+  }
+  return false;
+}
+
+const existsMiddlewareFile =
+  existsMiddlewareFileAt(`${appRoot}/middleware`) ||
+  existsMiddlewareFileAt(`${appRoot}/src/middleware`);
+
+if (!existsMiddlewareFile) {
+  const target = fs.existsSync(`${appRoot}/src`) ? 'src' : 'root';
+  console.log(`Middleware file is not detected. Adding an empty middleware.ts file at ${target} directory for convenience`);
+  const sourcePath = path.join(`${__dirname}${target === 'src' ? '/src' : ''}`, 'middleware.ts');
+  fs.copyFileSync(sourcePath, path.resolve(`${appRoot}/middleware.ts`));
+  console.log('Middleware file created');
+}
