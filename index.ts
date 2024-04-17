@@ -127,7 +127,7 @@ export function withHookdeck(config: HookdeckConfig, f: Function) {
   };
 }
 
-const AUTHENTICATED_ENTRY_POINT = 'https://hkdk.events';
+const AUTHENTICATED_ENTRY_POINT = 'https://hkdk.events/ingest';
 const HOOKDECK_PROCESSED_HEADER = 'x-hookdeck-signature';
 const HOOKDECK_SIGNATURE_HEADER_1 = 'x-hookdeck-signature-1'
 const HOOKDECK_SIGNATURE_HEADER_2 = 'x-hookdeck-signature-2'
