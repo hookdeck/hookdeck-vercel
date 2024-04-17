@@ -4,9 +4,12 @@ import { createHmac } from 'crypto';
 export function withHookdeck(config: HookdeckConfig, f: Function) {
   return async function (...args) {
     const request = args[0];
+    console.log('Invoking middleware code');
+    const middlewareResponse = await f.apply(this, args);
+
     if (!config) {
       console.error('Error getting hookdeck.config.js. Using standard middleware...');
-      return f.apply(this, args);
+      return middlewareResponse;
     }
     try {
       const pathname = (request.nextUrl ?? {}).pathname;
@@ -19,7 +22,7 @@ export function withHookdeck(config: HookdeckConfig, f: Function) {
 
       if (matching.length === 0) {
         console.log('No match... calling user middleware');
-        return f.apply(this, args);
+        return middlewareResponse;
       }
 
       const contains_proccesed_header =
@@ -50,7 +53,7 @@ export function withHookdeck(config: HookdeckConfig, f: Function) {
 
         // TODO: This makes the request to go through middleware twice, affecting Vercel costs!
         console.log('Request already processed by Hookdeck. Redirecting to middleware');
-        return f.apply(this, args);
+        return middlewareResponse;
       }
 
       // Forward to Hookdeck
@@ -74,14 +77,14 @@ export function withHookdeck(config: HookdeckConfig, f: Function) {
           console.error(
             "Hookdeck API key doesn't found. You must set it as a env variable named HOOKDECK_API_KEY or include it in your hookdeck.config.js file.",
           );
-          return f.apply(this, args);
+          return middlewareResponse;
         }
 
         if (!source_name) {
           console.error(
             "Hookdeck Source name doesn't found. You must include it in your hookdeck.config.js file.",
           );
-          return f.apply(this, args);
+          return middlewareResponse;
         }
 
         const match_key = `${api_key}/${source_name}`;
