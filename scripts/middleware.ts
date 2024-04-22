@@ -1,18 +1,20 @@
-// import type { NextFetchEvent } from "next/server";
-// import { withHookdeck } from "@hookdeck/vercel";
-// import hookdeckConfig from "./hookdeck.config";
-// import {  NextRequest  } from 'next/server';
+import { next } from '@vercel/edge';
+import { withHookdeck } from '@hookdeck/vercel';
+import hookdeckConfig from './hookdeck.config';
 
 
-// export const config = {
-//   matcher: ['your-match-config-here'],
-// };
+export const config = {
+  matcher: 'your-match-config-here',
+};
 
-// async function middleware(request: NextRequest, context: NextFetchEvent){
-//   /**
-//    * Your middleware function here
-//    * See https://vercel.com/docs/functions/edge-middleware
-//    */
-// }
+async function middleware(request: Request) {
+   /**
+    * Your middleware function here
+    * See https://vercel.com/docs/functions/edge-middleware
+    */
 
-// export default withHookdeck(hookdeckConfig, middleware);
+   // Hookdeck will process the request only if `next()` is returned
+   return next();
+}
+
+export default withHookdeck(hookdeckConfig, middleware);
