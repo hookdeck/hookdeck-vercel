@@ -2,15 +2,18 @@ import { HookdeckConfig } from './hookdeck.config';
 import { createHmac } from 'crypto';
 import { next } from '@vercel/edge';
 
-export function withHookdeck(config: HookdeckConfig, f: Function) {
+const AUTHENTICATED_ENTRY_POINT = 'https://hkdk.events/publish';
+const HOOKDECK_PROCESSED_HEADER = 'x-hookdeck-signature';
+const HOOKDECK_SIGNATURE_HEADER_1 = 'x-hookdeck-signature-1';
+const HOOKDECK_SIGNATURE_HEADER_2 = 'x-hookdeck-signature-2';
+
+export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Promise<Response> {
   return async function (...args) {
     const request = args[0];
-    console.log('Invoking middleware code');
-    const middlewareResponse = await f.apply(this, args);
 
     if (!config) {
       console.error('Error getting hookdeck.config.js. Using standard middleware...');
-      return middlewareResponse;
+      return Promise.resolve(f.apply(this, args));
     }
     try {
       const pathname = (request.nextUrl ?? {}).pathname;
@@ -23,7 +26,7 @@ export function withHookdeck(config: HookdeckConfig, f: Function) {
 
       if (matching.length === 0) {
         console.log('No match... calling user middleware');
-        return middlewareResponse;
+        return Promise.resolve(f.apply(this, args));
       }
 
       const contains_proccesed_header = !!request.headers.get(
@@ -59,13 +62,23 @@ export function withHookdeck(config: HookdeckConfig, f: Function) {
         return next();
       }
 
+      const middlewareResponse = await Promise.resolve(f.apply(this, args));
+      // invoke middleware if it returns something different to `next()`
+      if (
+        middlewareResponse &&
+        middlewareResponse.headers.get('x-middleware-next') !== '1' &&
+        middlewareResponse.headers.get('x-from-middleware') !== '1'
+      ) {
+        return middlewareResponse;
+      }
+
       // Forward to Hookdeck
 
       if (matching.length === 1) {
         // single source
         const api_key = matching[0].api_key || process.env.HOOKDECK_API_KEY;
         const source_name = matching[0].source_name;
-        return forwardToHookdeck(request, api_key!, source_name!, pathname);
+        return await forwardToHookdeck(request, api_key!, source_name!, pathname);
       }
 
       // multiple sources: check if there are multiple matches with the same api_key and source_name
@@ -129,11 +142,6 @@ export function withHookdeck(config: HookdeckConfig, f: Function) {
     }
   };
 }
-
-const AUTHENTICATED_ENTRY_POINT = 'https://hkdk.events/publish';
-const HOOKDECK_PROCESSED_HEADER = 'x-hookdeck-signature';
-const HOOKDECK_SIGNATURE_HEADER_1 = 'x-hookdeck-signature-1'
-const HOOKDECK_SIGNATURE_HEADER_2 = 'x-hookdeck-signature-2'
 
 async function verifyHookdeckSignature(request, secret: string | undefined): Promise<boolean> {
   const signature1 = (request.headers ?? {})[HOOKDECK_SIGNATURE_HEADER_1];
