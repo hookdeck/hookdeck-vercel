@@ -1,5 +1,6 @@
 import { HookdeckConfig } from './hookdeck.config';
 import { createHmac } from 'crypto';
+import { NextResponse } from "next/server";
 
 export function withHookdeck(config: HookdeckConfig, f: Function) {
   return async function (...args) {
@@ -25,10 +26,9 @@ export function withHookdeck(config: HookdeckConfig, f: Function) {
         return middlewareResponse;
       }
 
-      const contains_proccesed_header =
-        Object.keys(request.headers ?? {})
-          .map((e) => e.toLowerCase())
-          .filter((e) => e === HOOKDECK_PROCESSED_HEADER).length > 0;
+      const contains_proccesed_header = !!request.headers.get(
+        HOOKDECK_PROCESSED_HEADER
+      );
 
       if (contains_proccesed_header) {
         // Optional Hookdeck webhook signature verification
@@ -51,9 +51,10 @@ export function withHookdeck(config: HookdeckConfig, f: Function) {
           return new Response(msg, { status: 500 });
         }
 
-        // TODO: This makes the request to go through middleware twice, affecting Vercel costs!
-        console.log('Request already processed by Hookdeck. Redirecting to middleware');
-        return middlewareResponse;
+        // This makes the request to go through middleware twice, affecting Vercel costs!
+        const url = new URL(request.url);
+        url.pathname = matching[0].matcher;
+        return NextResponse.rewrite(url);
       }
 
       // Forward to Hookdeck
