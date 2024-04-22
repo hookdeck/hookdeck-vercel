@@ -14,7 +14,6 @@ export interface SourceConfig {
   retry?: Omit<Hookdeck.RetryRule, 'type'>;
   delay?: number;
   filter?: Omit<Hookdeck.FilterRule, 'type'>;
-  transformation?: Omit<Hookdeck.TransformRule, 'type'>;
   custom_response?: Hookdeck.SourceCustomResponse;
   verification?: Hookdeck.SourceVerification;
   url?: string;

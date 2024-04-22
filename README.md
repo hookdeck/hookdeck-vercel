@@ -1,6 +1,6 @@
 # Hookdeck's Vercel Middleware Integration
 
-In this quickstart, you'll learn how to integrate Hookdeck seamlessly in your Vercel project. If you are already using URLs of your Vercel project as a webhooks, you don't have to change your code: you will continue receiving the requests, but from Hookdeck (with all the features you may need, such as retries, authentication, transformations, etc).
+In this quickstart, you'll learn how to integrate Hookdeck seamlessly in your Vercel project. If you are already using URLs of your Vercel project as a webhooks, you don't have to change your code: you will continue receiving the requests, but from Hookdeck (with all the features you may need, such as retries, authentication, filters, etc).
 
 We will walk you through these steps:
 
@@ -59,7 +59,7 @@ you can also add the `@hookdeck/vercel` package manually to dev dependencies on 
 ## 3. Configuration
 
 The `@hookdeck/vercel` package is supported in the [Vercel's Edge
-Middleware](https://vercel.com/docs/functions/edge-middleware) code, that executes before a request is processed on your site. This way, the request can be fordwarded to Hookdeck and then received again by your specified endpoint, but with all the extra features you may need from Hookdeck such as retry strategies and transformations.
+Middleware](https://vercel.com/docs/functions/edge-middleware) code, that executes before a request is processed on your site. This way, the request can be fordwarded to Hookdeck and then received again by your specified endpoint, but with all the extra features you may need from Hookdeck such as retry strategies and filters.
 
 If you have not implemented Vercel Edge Middleware, check this [quick start
 guide](https://vercel.com/docs/functions/edge-middleware) to easily integrate into your project.
@@ -140,11 +140,6 @@ module.exports = {
         path: {},
       },
     ],
-    transformation: {
-      name: '',
-      code: '',
-      env: {},
-    },
     // source configuration
     custom_response: {},
     verification: {},
@@ -195,7 +190,6 @@ In case of advanced scenarios, you may need any of these configuration keys to u
 - `delay`: the number of milliseconds to hold the event when it arrives to Hookdeck.
 - `alert`: use either `each_attempt` or `last_attemp` to configure when to [trigger new issue](https://hookdeck.com/docs/issue-triggers) in case of failure.
 - `filters`: specify different filters to exclude some events from forwarding. Use the syntax specified in the [Filter documentation](https://hookdeck.com/docs/api#filter). For an overview of Filters, check this [Filters guide](https://hookdeck.com/docs/filters).
-- `transformations`: similar to filters, transformation allow you to change the event (payload, headers, etc.) before forwarding it back to Vercel. Use the syntax specified in the [Transform documentation](https://hookdeck.com/docs/api#transform). For an overview of Transformations, check this [Transformations guide](https://hookdeck.com/docs/transformations).
 - `custom_response`: the custom response to send back the webhook origin. Check the syntax in the [Source documentation](https://hookdeck.com/docs/api#source-object).
 - `verification`: inbound (source) verification mechanism to use. Check all possible values and syntax in the [Source documentation](https://hookdeck.com/docs/api#source-object).
 - `url`: hardcoded url to use to forward back the event. The recommended method is to use the `host` key. This configuration is intended for complex scenarios that involve other systems on top of Vercel and Hookdeck.
