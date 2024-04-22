@@ -32,6 +32,13 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
       const contains_proccesed_header = !!request.headers.get(
         HOOKDECK_PROCESSED_HEADER
       );
+      if (!process.env.HOOKDECK_API_KEY) {
+        console.error(
+          "Hookdeck API key doesn't found. You must set it as a env variable named HOOKDECK_API_KEY or include it in your hookdeck.config.js file.",
+        );
+        return Promise.resolve(f.apply(this, args));
+      }
+
 
       if (contains_proccesed_header) {
         // Optional Hookdeck webhook signature verification
@@ -88,13 +95,6 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
       for (const result of matching) {
         const api_key = result.api_key || process.env.HOOKDECK_API_KEY;
         const source_name = result.source_name;
-
-        if (!api_key) {
-          console.error(
-            "Hookdeck API key doesn't found. You must set it as a env variable named HOOKDECK_API_KEY or include it in your hookdeck.config.js file.",
-          );
-          return middlewareResponse;
-        }
 
         if (!source_name) {
           console.error(
