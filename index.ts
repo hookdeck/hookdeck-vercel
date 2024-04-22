@@ -170,7 +170,6 @@ async function forwardToHookdeck(
     ...request_headers,
     connection: 'close',
     authorization: `Bearer ${api_key}`,
-    'x-hookdeck-api-key': api_key,   // remove when Bearer is in prod
     'x-hookdeck-source-name': source_name,
   };
 
