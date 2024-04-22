@@ -83,7 +83,7 @@ export function middleware(request: Request, ctx: NextFetchEvent) {
 to this:
 
 ```typescript
-import { NextFetchEvent } from 'next/server'
+import { NextRequest, NextResponse, NextFetchEvent } from 'next/server'
 // ... other imports
 
 // add Hookdeck imports
@@ -95,13 +95,23 @@ export const config = {
 };
  
 // the middleware is not exported anymore
-function middleware(request: Request, ctx: NextFetchEvent) {
+function middleware(request: NextRequest, ctx: NextFetchEvent) {
     // ... your middleware logic
+    // return NextResponse.next() to manage a request with Hookdeck
 }
 
 // wrap the middleware with Hookdeck wrapper
 export default withHookdeck(hookdeckConfig, middleware);
 ```
+
+Whenever your Edge Middleware is triggered (because your middleware config matches) then the withHookdeck wrapper acts like this:
+
+- If there is no config file or none of the entries inside `hookdeck.config.js` matches the route, then your `middleware function` is invoked as is. 
+- If there is one or more matches with the entries of `hookdeck.config.js` then there are 3 possible cases:
+1) The received request has not been processed by Hookdeck (yet). In this case, your `middleware function` is invoked to obtain a `response`. If is a NextResponse.next() type, then the request is bounced back to Hookdeck. 
+*NOTE*: If you are not using next/server or @vercel/edge, the just return a new `Response` with a header `x-middleware-next` with value `"1"` if you want yo want the Hookdeck integration package to manage your request.
+
+2) The received request comes from Hookdeck and has been processed. Then the request is sent to the final route or url you specified. Your `middleware function` code will not be executed this time.
 
 
 ## 4. Deploy and Test
@@ -172,6 +182,7 @@ You can test your configuration commiting the `hookdeck.config.js` to your repo,
 If you send a request to your normal Vercel's url, it will be forwared to Hookdeck, and eventually will go back again to Vercel's function.
 
 
+
 ## 5. Advanced Configuration
 
 > If you are not familiar with the API reference for [connections](https://hookdeck.com/docs/api#connections), [sources](https://hookdeck.com/docs/api#sources) and [destinations](https://hookdeck.com/docs/api#sources), please give it a quick look.
@@ -198,4 +209,4 @@ If you have multiple entries in the config file with the same `matcher`, be awar
 
 ## 7. Webhook signature verification
 
-It is good practice to verify the signature of the requests that arrive at your Middleware. To ensure that the requests processed from Hookdeck are authentic, include your [Signing Secret](https://dashboard.hookdeck.com/settings/project/secrets) as an environment variable in your Vercel project with the name `HOOKDECK_SIGNING_SECRET`
+It is good practice to verify the signature of the requests that arrive at your Middleware. To ensure that the requests processed from Hookdeck are authentic, include your [Signing Secret](https://dashboard.hookdeck.com/settings/project/secrets) as an environment variable in your Vercel project with the name `HOOKDECK_SIGNING_SECRET`.
