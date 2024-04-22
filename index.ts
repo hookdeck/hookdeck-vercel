@@ -1,6 +1,6 @@
 import { HookdeckConfig } from './hookdeck.config';
 import { createHmac } from 'crypto';
-import { NextResponse } from "next/server";
+import { next } from '@vercel/edge';
 
 export function withHookdeck(config: HookdeckConfig, f: Function) {
   return async function (...args) {
@@ -53,8 +53,10 @@ export function withHookdeck(config: HookdeckConfig, f: Function) {
 
         // This makes the request to go through middleware twice, affecting Vercel costs!
         const url = new URL(request.url);
-        url.pathname = matching[0].matcher;
-        return NextResponse.rewrite(url);
+        url.pathname = cleanPath;
+
+        // TODO test without NextJS
+        return next();
       }
 
       // Forward to Hookdeck
