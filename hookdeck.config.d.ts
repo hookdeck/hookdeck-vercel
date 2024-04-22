@@ -20,7 +20,6 @@ export interface SourceConfig {
   delivery_rate?: DeliveryRate;
   http_method?: Hookdeck.SourceAllowedHttpMethod;
   auth_method?: Hookdeck.DestinationAuthMethodConfig;
-  path_forwarding_disabled?: boolean;
 }
 
 interface HookdeckConfig {
