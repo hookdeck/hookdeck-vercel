@@ -21,9 +21,6 @@ export interface SourceConfig {
   http_method?: Hookdeck.SourceAllowedHttpMethod;
   auth_method?: Hookdeck.DestinationAuthMethodConfig;
   path_forwarding_disabled?: boolean;
-  id?: string;
-  source_id?: string;
-  destination_id?: string;
 }
 
 interface HookdeckConfig {
