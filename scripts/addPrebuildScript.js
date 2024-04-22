@@ -72,7 +72,9 @@ const existsMiddlewareFile =
 
 if (!existsMiddlewareFile) {
   const target = fs.existsSync(`${appRoot}/src`) ? 'src' : 'root';
-  console.log(`Middleware file is not detected. Adding an empty middleware.ts file at ${target} directory for convenience`);
+  console.log(
+    `Middleware file is not detected. Adding an empty middleware.ts file at ${target} directory for convenience`,
+  );
   const sourcePath = path.join(`${__dirname}${target === 'src' ? '/src' : ''}`, 'middleware.ts');
   fs.copyFileSync(sourcePath, path.resolve(`${appRoot}/middleware.ts`));
   console.log('Middleware file created');

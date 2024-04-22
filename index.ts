@@ -15,6 +15,7 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
       console.error('Error getting hookdeck.config.js. Using standard middleware...');
       return Promise.resolve(f.apply(this, args));
     }
+
     try {
       const pathname = (request.nextUrl ?? {}).pathname;
       const cleanPath = pathname.split('&')[0];
@@ -29,9 +30,6 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
         return Promise.resolve(f.apply(this, args));
       }
 
-      const contains_proccesed_header = !!request.headers.get(
-        HOOKDECK_PROCESSED_HEADER
-      );
       if (!process.env.HOOKDECK_API_KEY) {
         console.error(
           "Hookdeck API key doesn't found. You must set it as a env variable named HOOKDECK_API_KEY or include it in your hookdeck.config.js file.",
@@ -39,10 +37,12 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
         return Promise.resolve(f.apply(this, args));
       }
 
+      const contains_proccesed_header = !!request.headers.get(HOOKDECK_PROCESSED_HEADER);
 
       if (contains_proccesed_header) {
         // Optional Hookdeck webhook signature verification
         let verified = true;
+
         if (matching.length === 1) {
           const secret = matching[0].signing_secret || process.env.HOOKDECK_SIGNING_SECRET;
           verified = await verifyHookdeckSignature(request, secret);
@@ -55,8 +55,9 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
             }
           }
         }
+
         if (!verified) {
-          const msg = "Invalid Hookdeck Signature in request.";
+          const msg = 'Invalid Hookdeck Signature in request.';
           console.error(msg);
           return new Response(msg, { status: 500 });
         }
@@ -110,8 +111,10 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
       }
 
       const promises: Promise<any>[] = [];
+
       for (const array of Object.values(used)) {
         const used_connection_ids: string[] = [];
+
         if ((array as [any]).length > 1) {
           // If there is more than one similar match, we need the connection_id
           // to pick out the right connection
@@ -123,6 +126,7 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
               used_connection_ids.push(entry.id);
             }
           }
+
           if (promises.length === 0) {
             console.warn(
               'Found indistinguishable source names, could not process',
@@ -151,16 +155,13 @@ async function verifyHookdeckSignature(request, secret: string | undefined): Pro
     // TODO: assumed string body
     const body = await new Response(request.body).text();
 
-    const hash = createHmac("sha256", secret)
-      .update(body)
-      .digest("base64");
+    const hash = createHmac('sha256', secret).update(body).digest('base64');
 
-      return (hash === signature1 || hash === signature2);
+    return hash === signature1 || hash === signature2;
   }
 
   return true;
 }
-
 
 async function forwardToHookdeck(
   request: Request,
