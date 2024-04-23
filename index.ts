@@ -1,10 +1,9 @@
 import { HookdeckConfig } from './hookdeck.config';
-import { createHmac } from 'crypto';
 import { next } from '@vercel/edge';
 
 const AUTHENTICATED_ENTRY_POINT = 'https://hkdk.events/publish';
 const HOOKDECK_PROCESSED_HEADER = 'x-hookdeck-signature';
-const HOOKDECK_SIGNATURE_HEADER_1 = 'x-hookdeck-signature-1';
+const HOOKDECK_SIGNATURE_HEADER_1 = 'x-hookdeck-signature';
 const HOOKDECK_SIGNATURE_HEADER_2 = 'x-hookdeck-signature-2';
 
 export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Promise<Response> {
@@ -86,7 +85,7 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
         // single source
         const api_key = matching[0].api_key || process.env.HOOKDECK_API_KEY;
         const source_name = matching[0].source_name;
-        return await forwardToHookdeck(request, api_key!, source_name!, pathname);
+        return await forwardToHookdeck(request, api_key, source_name!, pathname);
       }
 
       // multiple sources: check if there are multiple matches with the same api_key and source_name
@@ -154,8 +153,22 @@ async function verifyHookdeckSignature(request, secret: string | undefined): Pro
   if (secret && (signature1 || signature2)) {
     // TODO: assumed string body
     const body = await new Response(request.body).text();
-
-    const hash = createHmac('sha256', secret).update(body).digest('base64');
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(secret);
+    const bodyData = encoder.encode(body);
+    const cryptoKey = await crypto.subtle.importKey(
+      'raw',
+      keyData,
+      { name: 'HMAC', hash: { name: 'SHA-256' } },
+      false,
+      ['sign'],
+    );
+    const hmac = await crypto.subtle.sign(
+      'HMAC',
+      cryptoKey,
+      bodyData, // Datos que serán hasheados
+    );
+    const hash = btoa(String.fromCharCode(...new Uint8Array(hmac)));
 
     return hash === signature1 || hash === signature2;
   }
