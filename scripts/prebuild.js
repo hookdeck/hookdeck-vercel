@@ -1,6 +1,5 @@
 const appRoot = require('app-root-path');
 const fs = require('fs');
-const { customAlphabet } = require('nanoid');
 const path = require('path');
 const { exit } = require('process');
 const hookdeckConfig = require('../hookdeck.config');
@@ -96,11 +95,19 @@ if (!checkPrebuild()) {
 }
 
 function generateId(prefix = '') {
-  const ID_ALPHABET = '0123456789abcdefghijklmnopqrstuvwxyz';
   const ID_length = 16;
 
-  const nanoid = customAlphabet(ID_ALPHABET, ID_length);
-  return `${prefix}${nanoid()}`;
+  const randomAlphaNumeric = (length) => {
+    let s = '';
+    Array.from({ length }).some(() => {
+      s += Math.random().toString(36).slice(2);
+      return s.length >= length;
+    });
+    return s.slice(0, length);
+  };
+
+  const nanoid = randomAlphaNumeric(ID_length);
+  return `${prefix}${nanoid}`;
 }
 
 function isValidPropertyValue(propValue) {
