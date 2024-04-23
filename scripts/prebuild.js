@@ -12,11 +12,10 @@ const TUTORIAL_URL = 'https://hookdeck.com/docs';
 const { HookdeckEnvironment } = require('@hookdeck/sdk');
 const API_ENDPOINT = HookdeckEnvironment.Default;
 
-
 async function checkPrebuild() {
   try {
     validateMiddleware();
-    if (!validateConfig(hookdeckConfig)){
+    if (!validateConfig(hookdeckConfig)) {
       return false;
     }
 
@@ -28,12 +27,14 @@ async function checkPrebuild() {
         signing_secret: hookdeckConfig.signing_secret || process.env.HOOKDECK_SIGNING_SECRET,
         host: hookdeckConfig.vercel_url || `https://${process.env.VERCEL_BRANCH_URL}`,
         matcher: key,
-        source_name: slugify(key)
+        source_name: slugify(key),
       });
     });
 
     if (connections.length === 0) {
-      console.warn('hookdeck.config.js file seems to be invalid. Please follow the steps in ${TUTORIAL_URL}.');
+      console.warn(
+        'hookdeck.config.js file seems to be invalid. Please follow the steps in ${TUTORIAL_URL}.',
+      );
       return false;
     }
 
@@ -348,19 +349,21 @@ function validateConfig(hookdeckConfig) {
 
   if (!(hookdeckConfig.signing_secret || process.env.HOOKDECK_SIGNING_SECRET)) {
     console.warn(
-      'Signing secret key is not present neither in `hookdeckConfig.signing_secret` nor `process.env.HOOKDECK_SIGNING_SECRET`. You won\'t be able to validate webhooks\' signatures. ' + `Please follow the steps in ${TUTORIAL_URL}.`,
+      "Signing secret key is not present neither in `hookdeckConfig.signing_secret` nor `process.env.HOOKDECK_SIGNING_SECRET`. You won't be able to validate webhooks' signatures. " +
+        `Please follow the steps in ${TUTORIAL_URL}.`,
     );
   }
 
   if (!hookdeckConfig.vercel_url) {
     console.info(
-      'Vercel url not present in `hookdeckConfig.vercel_url`. Using fallback value `process.env.HOOKDECK_SIGNING_SECRET`'
+      'Vercel url not present in `hookdeckConfig.vercel_url`. Using fallback value `process.env.HOOKDECK_SIGNING_SECRET`',
     );
   }
 
   if (!process.env.VERCEL_BRANCH_URL) {
     console.error(
-      'Vercel url not present `process.env.VERCEL_BRANCH_URL`. ' + `Please follow the steps in ${TUTORIAL_URL}.`,
+      'Vercel url not present `process.env.VERCEL_BRANCH_URL`. ' +
+        `Please follow the steps in ${TUTORIAL_URL}.`,
     );
     return false;
   }
@@ -492,11 +495,13 @@ async function updateDestination(api_key, id, config) {
 }
 
 function slugify(text) {
-  return text.toString().toLowerCase()
-    .replace(/\//g, '-')            // Replace / with -
-    .replace(/\s+/g, '-')           // Replace spaces with -
-    .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
-    .replace(/\-\-+/g, '-')         // Replace multiple - with single -
-    .replace(/^-+/, '')             // Trim - from start of text
-    .replace(/-+$/, '');            // Trim - from end of text
+  return text
+    .toString()
+    .toLowerCase()
+    .replace(/\//g, '-') // Replace / with -
+    .replace(/\s+/g, '-') // Replace spaces with -
+    .replace(/[^\w\-]+/g, '') // Remove all non-word chars
+    .replace(/\-\-+/g, '-') // Replace multiple - with single -
+    .replace(/^-+/, '') // Trim - from start of text
+    .replace(/-+$/, ''); // Trim - from end of text
 }
