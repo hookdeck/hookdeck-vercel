@@ -16,7 +16,7 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
     }
 
     try {
-      const pathname = getPathStringWithFallback(request);
+      const pathname = getPathnameWithFallback(request);
       const cleanPath = pathname.split('&')[0];
 
       const connections = Object.values(config);
@@ -25,7 +25,7 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
       );
 
       if (matching.length === 0) {
-        console.debug('[Hookdeck] No match... calling user middleware');
+        console.debug(`[Hookdeck] No match for path '${cleanPath}'... calling user middleware`);
         return Promise.resolve(f.apply(this, args));
       }
 
@@ -47,6 +47,7 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
           verified = await verifyHookdeckSignature(request, secret);
         } else {
           verified = false;
+          // any of them must match
           for (const match of matching) {
             const secret = match.signing_secret || process.env.HOOKDECK_SIGNING_SECRET;
             if (await verifyHookdeckSignature(request, secret)) {
@@ -61,11 +62,7 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
           return new Response(msg, { status: 401 });
         }
 
-        // This makes the request to go through middleware twice, affecting Vercel costs!
-        const url = new URL(request.url);
-        url.pathname = cleanPath;
-
-        // TODO test without NextJS
+        // Go to next (Edge function or regular page) in the chain
         return next();
       }
 
@@ -84,7 +81,7 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
       if (matching.length === 1) {
         // single source
         const api_key = matching[0].api_key || process.env.HOOKDECK_API_KEY;
-        const source_name = matching[0]['source_name'];
+        const source_name = matching[0].source_name;
         return await forwardToHookdeck(request, api_key, source_name, pathname);
       }
 
@@ -94,7 +91,7 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
 
       for (const result of matching) {
         const api_key = result.api_key || process.env.HOOKDECK_API_KEY;
-        const source_name = result['source_name'];
+        const source_name = result.source_name;
 
         if (!source_name) {
           console.error(
@@ -146,7 +143,7 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
   };
 }
 
-function getPathStringWithFallback(request: any): string {
+function getPathnameWithFallback(request: any): string {
   // try with Next's object
   let pathname = request.nextUrl;
   if (!pathname) {
