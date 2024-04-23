@@ -30,7 +30,7 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
       }
 
       if (!process.env.HOOKDECK_API_KEY) {
-        console.error(
+        console.warn(
           "[Hookdeck] Hookdeck API key doesn't found. You must set it as a env variable named HOOKDECK_API_KEY or include it in your hookdeck.config.js file.",
         );
         return Promise.resolve(f.apply(this, args));
