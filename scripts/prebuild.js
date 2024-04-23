@@ -47,19 +47,19 @@ async function checkPrebuild() {
 
       let connection;
       if (has_connection_id) {
-        connection = await updateConnection(api_key, conn_config);
+        connection = await updateConnection(conn_config.api_key, conn_config);
       } else {
         // avoid creating identical connections
-        const pseudo_key = `${api_key}*${conn_config.source_name}*${conn_config.host}`;
+        const pseudo_key = `${conn_config.api_key}*${conn_config.source_name}*${conn_config.host}`;
         const cached_connection_id = created_connections_pseudo_keys[pseudo_key] || null;
 
         if (cached_connection_id) {
           connection = await updateConnection(
-            api_key,
+            conn_config.api_key,
             Object.assign({ connection_id: cached_connection_id }, conn_config),
           );
         } else {
-          connection = await autoCreateConnection(api_key, conn_config);
+          connection = await autoCreateConnection(conn_config.api_key, conn_config);
           created_connections_pseudo_keys[pseudo_key] = connection.id;
         }
       }
