@@ -5,22 +5,6 @@ interface DeliveryRate {
   period?: Hookdeck.DestinationRateLimitPeriod;
 }
 
-export interface SourceConfig {
-  // all attributes are optional
-
-  // Hookdeck basic functionallity
-  retry?: Omit<Hookdeck.RetryRule, 'type'>;
-  delay?: number;
-  filter?: Omit<Hookdeck.FilterRule, 'type'>;
-  delivery_rate?: DeliveryRate;
-
-  // source verification
-  verification?: Hookdeck.SourceVerification;
-
-  // tweak response
-  custom_response?: Hookdeck.SourceCustomResponse;
-}
-
 interface HookdeckConfig {
   vercel_url?: string; // optional
 
@@ -28,7 +12,21 @@ interface HookdeckConfig {
   signing_secret?: string; // not recommended, use HOOKDECK_SIGNING_SECRET instead
 
   match: {
-    [source_name: string]: SourceConfig;
+    [key: string]: {
+      // all attributes are optional
+
+      // Hookdeck basic functionallity
+      retry?: Omit<Hookdeck.RetryRule, 'type'>;
+      delay?: number;
+      filter?: Omit<Hookdeck.FilterRule, 'type'>;
+      delivery_rate?: DeliveryRate;
+
+      // source verification
+      verification?: Hookdeck.SourceVerification;
+
+      // tweak response
+      custom_response?: Hookdeck.SourceCustomResponse;
+    };
   };
 }
 
