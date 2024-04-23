@@ -185,17 +185,18 @@ If you send a request to your normal Vercel's url, it will be forwared to Hookde
 In case of advanced scenarios, you may need any of these configuration keys to use all Hookdeck's capabilities directly from Vercel:
 
 - `api_key`: You can specify a Hookdeck API key for every single connection. It will have priority over the general env variable `HOOKDECK_API_KEY`. It's better to use Vercel's env variable insterad of this configuration key. This key is intented for complex setups involving several [Hookdeck organizations](https://hookdeck.com/docs/organizations) or even accounts.
+- `signing_secret`: You can specify a Hookdeck Signing Secret for every single connection. It will have priority over the general env variable `HOOKDECK_SIGNING_SECRET`. It's better to use Vercel's env variable insterad of this configuration key. This key is intented for [webhook signature verification](https://hookdeck.com/docs/authentication#hookdeck-webhook-signature-verification).
+
 - `host`: The Vercel's host that can receive the requests. If not specified, the host stored in env var `VERCEL_BRANCH_URL` will be used.
+- `url`: hardcoded url to use to forward back the event. The recommended method is to use the `host` key. This configuration is intended for complex scenarios that involve other systems on top of Vercel and Hookdeck.
+
 - `retry`: use the values specified in the [Retry documentation](https://hookdeck.com/docs/api#retry) to configura Hookdeck's retry strategy.
 - `delay`: the number of milliseconds to hold the event when it arrives to Hookdeck.
-- `alert`: use either `each_attempt` or `last_attemp` to configure when to [trigger new issue](https://hookdeck.com/docs/issue-triggers) in case of failure.
 - `filters`: specify different filters to exclude some events from forwarding. Use the syntax specified in the [Filter documentation](https://hookdeck.com/docs/api#filter). For an overview of Filters, check this [Filters guide](https://hookdeck.com/docs/filters).
-- `custom_response`: the custom response to send back the webhook origin. Check the syntax in the [Source documentation](https://hookdeck.com/docs/api#source-object).
-- `verification`: inbound (source) verification mechanism to use. Check all possible values and syntax in the [Source documentation](https://hookdeck.com/docs/api#source-object).
-- `url`: hardcoded url to use to forward back the event. The recommended method is to use the `host` key. This configuration is intended for complex scenarios that involve other systems on top of Vercel and Hookdeck.
 - `delivery_rate`: set the contention rate to be used for the outcoming traffic. Check the syntax in the `rate_limit_period` key in the [Destination documentation](https://hookdeck.com/docs/api#destination-object).
-- `http_method`: the HTTP method to use in the outcoming requests. If not specified, the same method will be kept.
-- `auth_method`: outbound (destination) authentication mechanism to use. Check all possible values and syntax in the [Destination documentation](https://hookdeck.com/docs/api#destination-object).
+
+- `verification`: inbound (source) verification mechanism to use. Check all possible values and syntax in the [Source documentation](https://hookdeck.com/docs/api#source-object).
+- `custom_response`: the custom response to send back the webhook origin. Check the syntax in the [Source documentation](https://hookdeck.com/docs/api#source-object).
 
 ## 6. Vercel Edge Middleware limitations
 
