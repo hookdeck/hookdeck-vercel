@@ -222,7 +222,7 @@ async function autoCreateConnection(api_key, config) {
       body: JSON.stringify(data),
     });
     if (response.status !== 200) {
-      manageResponseError(response);
+      manageResponseError(response, JSON.stringify(data));
       return null;
     }
     const json = await response.json();
@@ -238,18 +238,14 @@ function manageError(error) {
   process.exit(1);
 }
 
-function manageResponseError(response, isFromHookdeck = true) {
+function manageResponseError(response, body) {
   switch (response.status) {
     case 401:
-      console.error(
-        `Invalid or expired ${isFromHookdeck ? 'hookdeck api_key' : 'vercel token'}`,
-        response.status,
-        response.statusText,
-      );
+      console.error('Invalid or expired hookdeck api_key', response.status, response.statusText);
       break;
 
     default:
-      console.error('Error', response.status, response.statusText);
+      console.error('Error', response.status, response.statusText, body);
       break;
   }
   process.exit(1);
@@ -392,7 +388,7 @@ async function updateConnection(api_key, config) {
     });
     if (response.status !== 200) {
       console.error('Error while updating connection with ID', config.id);
-      manageResponseError(response);
+      manageResponseError(response, JSON.stringify(data));
       return null;
     }
     const json = await response.json();
