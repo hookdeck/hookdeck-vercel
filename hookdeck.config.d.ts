@@ -21,17 +21,15 @@ export interface SourceConfig {
   custom_response?: Hookdeck.SourceCustomResponse;
 }
 
-interface MatchConfig {
-  [source_name: string]: SourceConfig;
-}
-
 interface HookdeckConfig {
   vercel_url?: string; // optional
 
   api_key?: string; // not recommended, use HOOKDECK_API_KEY instead
   signing_secret?: string; // not recommended, use HOOKDECK_SIGNING_SECRET instead
 
-  match: MatchConfig;
+  match: {
+    [source_name: string]: SourceConfig;
+  };
 }
 
 export type { HookdeckConfig };
