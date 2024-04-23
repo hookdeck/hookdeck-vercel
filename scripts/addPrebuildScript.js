@@ -13,6 +13,7 @@ console.log(`[${libraryName}] Post Install Script Running...`);
 const packagePath = path.resolve(`${appRoot}/package.json`);
 if (fs.existsSync(packagePath)) {
   const packageJSON = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+  // adds or update if needed prebuild script
   if (!packageJSON.scripts.prebuild) {
     packageJSON.scripts.prebuild = prebuildScript;
     fs.writeFileSync(packagePath, JSON.stringify(packageJSON, null, 2));
@@ -27,6 +28,13 @@ if (fs.existsSync(packagePath)) {
       console.log(`%c[${libraryName}] Prebuild script updated in ${packagePath}`, green);
     }
   }
+  // adds build script if needed
+  if (!packageJSON.scripts.build) {
+    packageJSON.scripts.build = '';
+    fs.writeFileSync(packagePath, JSON.stringify(packageJSON, null, 2));
+    console.log(`%c[${libraryName}] Build script added to ${packagePath}`, green);
+  }
+
   const sourcePath = path.join(__dirname, 'prebuild.js');
   const destDir = `${appRoot}/.hookdeck`;
   const destinationPath = path.join(`${appRoot}/.hookdeck`, 'prebuild.js');
