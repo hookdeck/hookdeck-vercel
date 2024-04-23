@@ -6,14 +6,7 @@ interface DeliveryRate {
 }
 
 export interface SourceConfig {
-  matcher: string;
-
-  api_key?: string; // not recommended, use HOOKDECK_API_KEY instead
-  signing_secret?: string; // not recommended, use HOOKDECK_SIGNING_SECRET instead
-
-  // for advanced routing scenarios
-  host?: string;
-  url?: string;
+  // all attributes are optional
 
   // Hookdeck basic functionallity
   retry?: Omit<Hookdeck.RetryRule, 'type'>;
@@ -28,8 +21,17 @@ export interface SourceConfig {
   custom_response?: Hookdeck.SourceCustomResponse;
 }
 
-interface HookdeckConfig {
+interface MatchConfig {
   [source_name: string]: SourceConfig;
+}
+
+interface HookdeckConfig {
+  vercel_url?: string; // optional
+
+  api_key?: string; // not recommended, use HOOKDECK_API_KEY instead
+  signing_secret?: string; // not recommended, use HOOKDECK_SIGNING_SECRET instead
+
+  match: MatchConfig;
 }
 
 export type { HookdeckConfig };
