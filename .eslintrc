@@ -17,7 +17,7 @@
     "extraFileExtensions": [".mjs"]
   },
   "plugins": ["@typescript-eslint", "import"],
-  "ignorePatterns": ["dist", "node_modules"],
+  "ignorePatterns": ["dist", "node_modules", "scripts/middleware.ts"],
   "rules": {
     "@typescript-eslint/adjacent-overload-signatures": "error",
     "@typescript-eslint/no-empty-function": "error",

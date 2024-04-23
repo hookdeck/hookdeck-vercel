@@ -85,7 +85,7 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
         // single source
         const api_key = matching[0].api_key || process.env.HOOKDECK_API_KEY;
         const source_name = matching[0]['source_name'];
-        return await forwardToHookdeck(request, api_key, source_name!, pathname);
+        return await forwardToHookdeck(request, api_key, source_name, pathname);
       }
 
       // multiple sources: check if there are multiple matches with the same api_key and source_name
