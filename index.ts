@@ -84,7 +84,7 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
       if (matching.length === 1) {
         // single source
         const api_key = matching[0].api_key || process.env.HOOKDECK_API_KEY;
-        const source_name = matching[0].source_name;
+        const source_name = matching[0]['source_name'];
         return await forwardToHookdeck(request, api_key, source_name!, pathname);
       }
 
