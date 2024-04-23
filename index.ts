@@ -11,7 +11,7 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
     const request = args[0];
 
     if (!config) {
-      console.error('Error getting hookdeck.config.js. Using standard middleware...');
+      console.error('[Hookdeck] Error getting hookdeck.config.js. Using standard middleware...');
       return Promise.resolve(f.apply(this, args));
     }
 
@@ -25,13 +25,13 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
       );
 
       if (matching.length === 0) {
-        console.log('No match... calling user middleware');
+        console.debug('[Hookdeck] No match... calling user middleware');
         return Promise.resolve(f.apply(this, args));
       }
 
       if (!process.env.HOOKDECK_API_KEY) {
         console.error(
-          "Hookdeck API key doesn't found. You must set it as a env variable named HOOKDECK_API_KEY or include it in your hookdeck.config.js file.",
+          "[Hookdeck] Hookdeck API key doesn't found. You must set it as a env variable named HOOKDECK_API_KEY or include it in your hookdeck.config.js file.",
         );
         return Promise.resolve(f.apply(this, args));
       }
@@ -56,9 +56,9 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
         }
 
         if (!verified) {
-          const msg = 'Invalid Hookdeck Signature in request.';
+          const msg = '[Hookdeck] Invalid Hookdeck Signature in request.';
           console.error(msg);
-          return new Response(msg, { status: 500 });
+          return new Response(msg, { status: 401 });
         }
 
         // This makes the request to go through middleware twice, affecting Vercel costs!
@@ -94,7 +94,7 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
 
       for (const result of matching) {
         const api_key = result.api_key || process.env.HOOKDECK_API_KEY;
-        const source_name = result.source_name;
+        const source_name = result['source_name'];
 
         if (!source_name) {
           console.error(
@@ -128,7 +128,7 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
 
           if (promises.length === 0) {
             console.warn(
-              'Found indistinguishable source names, could not process',
+              '[Hookdeck] Found indistinguishable source names, could not process',
               array[0].source_name,
             );
           }
@@ -140,7 +140,7 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
     } catch (e) {
       // If an error is thrown here, it's better not to continue
       // with default middleware function, as it could lead to more errors
-      console.error(e);
+      console.error('[Hookdeck] Exception on withHookdeck', e);
       return new Response(JSON.stringify(e), { status: 500 });
     }
   };
@@ -178,7 +178,7 @@ async function verifyHookdeckSignature(request, secret: string | undefined): Pro
     const hmac = await crypto.subtle.sign(
       'HMAC',
       cryptoKey,
-      bodyData, // Datos que serán hasheados
+      bodyData,
     );
     const hash = btoa(String.fromCharCode(...new Uint8Array(hmac)));
 
@@ -221,7 +221,7 @@ async function forwardToHookdeck(
     options['body'] = body;
   }
 
-  console.log(`Forwarding to hookdeck (${!!body ? 'with' : 'without'} body)...`, options);
+  console.debug(`[Hookdeck] Forwarding to hookdeck (${!!body ? 'with' : 'without'} body)...`, options);
 
   return fetch(`${AUTHENTICATED_ENTRY_POINT}${pathname}`, options);
 }
