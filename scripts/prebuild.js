@@ -12,57 +12,47 @@ const TUTORIAL_URL = 'https://hookdeck.com/docs';
 const { HookdeckEnvironment } = require('@hookdeck/sdk');
 const API_ENDPOINT = HookdeckEnvironment.Default;
 
+
 async function checkPrebuild() {
   try {
     validateMiddleware();
-
-    if (!hookdeckConfig) {
-      console.warn(
-        `Usage of ${LIBRARY_NAME} detected but hookdeck.config.js could not be imported. Please follow the steps in ${TUTORIAL_URL} to export the hookdeckConfig object`,
-      );
+    if (!validateConfig(hookdeckConfig)){
       return false;
     }
 
-    const connections = Object.entries(hookdeckConfig).map((e) => {
-      const source_name = e[0];
-      const conn = e[1];
-      return Object.assign(conn, { source_name });
+    const connections = Object.entries(hookdeckConfig.match).map((e) => {
+      const key = e[0];
+      const value = e[1];
+      return Object.assign(value, {
+        api_key: hookdeckConfig.api_key || process.env.HOOKDECK_API_KEY,
+        signing_secret: hookdeckConfig.signing_secret || process.env.HOOKDECK_SIGNING_SECRET,
+        host: hookdeckConfig.vercel_url || `https://${process.env.VERCEL_BRANCH_URL}`,
+        matcher: key,
+        source_name: slugify(key)
+      });
     });
 
-    const validConfigFileResult = validateConfig(connections);
-    if (!validConfigFileResult.ok) {
-      console.warn(validConfigFileResult.msg);
+    if (connections.length === 0) {
+      console.warn('hookdeck.config.js file seems to be invalid. Please follow the steps in ${TUTORIAL_URL}.');
       return false;
     }
 
-    console.log('hookdeck.config.js validated successfully');
+    console.log('hookdeck.config.js is valid');
 
     const env_configs = [];
     const created_connections_pseudo_keys = {};
     for (const conn_config of connections) {
-      const api_key = conn_config.api_key || process.env.HOOKDECK_API_KEY;
-      if (!api_key) {
-        console.warn(
-          `Hookdeck's API key doesn't found. You must set it as a env variable named HOOKDECK_API_KEY or include it in your hookdeck.config.js. Check ${TUTORIAL_URL} for more info.`,
-        );
-        return false;
-      }
-      if (!isString(api_key) || api_key.trim().length === 0) {
-        console.warn(`Invalid Hookdeck API KEY format. Check ${TUTORIAL_URL} for more info.`);
-        return false;
-      }
-
       const has_connection_id = !!conn_config.id;
 
       let connection;
       if (has_connection_id) {
         connection = await updateConnection(api_key, conn_config);
       } else {
-        // avoid creting identical connections
+        // avoid creating identical connections
         const pseudo_key = `${api_key}*${conn_config.source_name}*${conn_config.host}`;
         const cached_connection_id = created_connections_pseudo_keys[pseudo_key] || null;
 
-        if (cached_connection_id !== null) {
+        if (cached_connection_id) {
           connection = await updateConnection(
             api_key,
             Object.assign({ connection_id: cached_connection_id }, conn_config),
@@ -116,30 +106,6 @@ function isValidPropertyValue(propValue) {
 
 function isString(str) {
   return typeof str === 'string' || str instanceof String;
-}
-
-function validateConfig(connections) {
-  let valid = true;
-  const msgs = [];
-  const string_props = ['source_name', 'matcher'];
-  let index = 0;
-
-  for (const conn of connections) {
-    for (const prop of string_props) {
-      if (!isValidPropertyValue(conn[prop])) {
-        msgs.push(
-          `hookdeck.config[${conn.source_name}]: Undefined or invalid value for key ${prop} in configuration file at hookdeck.config.js`,
-        );
-        valid = false;
-      }
-    }
-    index++;
-  }
-
-  return {
-    ok: valid,
-    msg: msgs.join(', '),
-  };
 }
 
 function getDestinationUrl(config) {
@@ -237,6 +203,9 @@ async function autoCreateConnection(api_key, config) {
   }
   if (!!config.auth_method) {
     data.destination.auth_method = config.auth_method;
+  }
+  if (!!config.delivery_rate) {
+    data.destination.delivery_rate = config.delivery_rate;
   }
 
   try {
@@ -357,6 +326,48 @@ function validateMiddleware() {
   }
 }
 
+function validateConfig(hookdeckConfig) {
+  if (!hookdeckConfig) {
+    console.error(
+      `Usage of ${LIBRARY_NAME} detected but hookdeck.config.js could not be imported. Please follow the steps in ${TUTORIAL_URL} to export the hookdeckConfig object`,
+    );
+    return false;
+  }
+
+  const api_key = hookdeckConfig.api_key || process.env.HOOKDECK_API_KEY;
+  if (!api_key) {
+    console.error(
+      `Hookdeck's API key doesn't found. You must set it as a env variable named HOOKDECK_API_KEY or include it in your hookdeck.config.js. Check ${TUTORIAL_URL} for more info.`,
+    );
+    return false;
+  }
+  if (!isString(api_key) || api_key.trim().length === 0) {
+    console.error(`Invalid Hookdeck API KEY format. Check ${TUTORIAL_URL} for more info.`);
+    return false;
+  }
+
+  if (!(hookdeckConfig.signing_secret || process.env.HOOKDECK_SIGNING_SECRET)) {
+    console.warn(
+      'Signing secret key is not present neither in `hookdeckConfig.signing_secret` nor `process.env.HOOKDECK_SIGNING_SECRET`. You won\'t be able to validate webhooks\' signatures. ' + `Please follow the steps in ${TUTORIAL_URL}.`,
+    );
+  }
+
+  if (!hookdeckConfig.vercel_url) {
+    console.info(
+      'Vercel url not present in `hookdeckConfig.vercel_url`. Using fallback value `process.env.HOOKDECK_SIGNING_SECRET`'
+    );
+  }
+
+  if (!process.env.VERCEL_BRANCH_URL) {
+    console.error(
+      'Vercel url not present `process.env.VERCEL_BRANCH_URL`. ' + `Please follow the steps in ${TUTORIAL_URL}.`,
+    );
+    return false;
+  }
+
+  return true;
+}
+
 async function updateConnection(api_key, config) {
   const data = {};
   const rules = getConnectionRules(config);
@@ -397,7 +408,8 @@ async function updateConnection(api_key, config) {
     if (
       config.path_forwarding_disabled !== null ||
       (config.http_method || null) !== null ||
-      (config.auth_method || null) !== null
+      (config.auth_method || null) !== null ||
+      (config.delivery_rate || null) !== null
     ) {
       const destination_id = json.destination.id;
       await updateDestination(api_key, destination_id, config);
@@ -456,6 +468,11 @@ async function updateDestination(api_key, id, config) {
   if ((config.auth_method || null) !== null) {
     data.auth_method = config.auth_method;
   }
+  if ((config.delivery_rate || null) !== null) {
+    data.rate_limit = config.delivery_rate.limit;
+    data.rate_limit_period = config.delivery_rate.period;
+  }
+
   const url = `${API_ENDPOINT}/destinations/${id}`;
   const response = await fetch(url, {
     method: 'PUT',
@@ -472,4 +489,14 @@ async function updateDestination(api_key, id, config) {
   }
   const json = await response.json();
   console.log('Destination updated', json);
+}
+
+function slugify(text) {
+  return text.toString().toLowerCase()
+    .replace(/\//g, '-')            // Replace / with -
+    .replace(/\s+/g, '-')           // Replace spaces with -
+    .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
+    .replace(/\-\-+/g, '-')         // Replace multiple - with single -
+    .replace(/^-+/, '')             // Trim - from start of text
+    .replace(/-+$/, '');            // Trim - from end of text
 }
