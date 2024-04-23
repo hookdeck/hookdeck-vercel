@@ -175,11 +175,7 @@ async function verifyHookdeckSignature(request, secret: string | undefined): Pro
       false,
       ['sign'],
     );
-    const hmac = await crypto.subtle.sign(
-      'HMAC',
-      cryptoKey,
-      bodyData,
-    );
+    const hmac = await crypto.subtle.sign('HMAC', cryptoKey, bodyData);
     const hash = btoa(String.fromCharCode(...new Uint8Array(hmac)));
 
     return hash === signature1 || hash === signature2;
@@ -221,7 +217,10 @@ async function forwardToHookdeck(
     options['body'] = body;
   }
 
-  console.debug(`[Hookdeck] Forwarding to hookdeck (${!!body ? 'with' : 'without'} body)...`, options);
+  console.debug(
+    `[Hookdeck] Forwarding to hookdeck (${!!body ? 'with' : 'without'} body)...`,
+    options,
+  );
 
   return fetch(`${AUTHENTICATED_ENTRY_POINT}${pathname}`, options);
 }

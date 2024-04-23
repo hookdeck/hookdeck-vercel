@@ -173,11 +173,11 @@ function getConnectionRules(config) {
     }
   }
 
-// Transformations disabled for now
-//  if ((config.transformation || null) !== null && config.transformation.constructor === Object) {
-//    const target = config.transformation;
-//    rules.push({ type: 'transform', transformation: target });
-//  }
+  // Transformations disabled for now
+  //  if ((config.transformation || null) !== null && config.transformation.constructor === Object) {
+  //    const target = config.transformation;
+  //    rules.push({ type: 'transform', transformation: target });
+  //  }
 
   return rules;
 }
