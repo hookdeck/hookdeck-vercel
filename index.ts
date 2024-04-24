@@ -19,7 +19,15 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
       const pathname = getPathnameWithFallback(request);
       const cleanPath = pathname.split('&')[0];
 
-      const connections = Object.values(config);
+      const connections = Object.entries(config.match).map((e) => {
+        const key = e[0];
+        const value = e[1] as any;
+        return Object.assign(value, {
+          matcher: key,
+          source_name: slugify(key),
+        });
+      });
+
       const matching = connections.filter(
         (conn_config) => (cleanPath.match(conn_config.matcher) ?? []).length > 0,
       );
@@ -29,7 +37,8 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
         return Promise.resolve(f.apply(this, args));
       }
 
-      if (!process.env.HOOKDECK_API_KEY) {
+      const api_key = config.api_key || process.env.HOOKDECK_API_KEY;
+      if (!api_key) {
         console.warn(
           "[Hookdeck] Hookdeck API key doesn't found. You must set it as a env variable named HOOKDECK_API_KEY or include it in your hookdeck.config.js file.",
         );
@@ -37,23 +46,13 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
       }
 
       const contains_proccesed_header = !!request.headers.get(HOOKDECK_PROCESSED_HEADER);
-
       if (contains_proccesed_header) {
         // Optional Hookdeck webhook signature verification
         let verified = true;
 
-        if (matching.length === 1) {
-          const secret = matching[0].signing_secret || process.env.HOOKDECK_SIGNING_SECRET;
+        const secret = config.signing_secret || process.env.HOOKDECK_SIGNING_SECRET;
+        if (!!secret) {
           verified = await verifyHookdeckSignature(request, secret);
-        } else {
-          verified = false;
-          // any of them must match
-          for (const match of matching) {
-            const secret = match.signing_secret || process.env.HOOKDECK_SIGNING_SECRET;
-            if (await verifyHookdeckSignature(request, secret)) {
-              verified = true;
-            }
-          }
         }
 
         if (!verified) {
@@ -80,7 +79,6 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
 
       if (matching.length === 1) {
         // single source
-        const api_key = matching[0].api_key || process.env.HOOKDECK_API_KEY;
         const source_name = matching[0].source_name;
         return await forwardToHookdeck(request, api_key, source_name, pathname);
       }
@@ -90,9 +88,7 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
       const used = new Map<string, [any]>();
 
       for (const result of matching) {
-        const api_key = result.api_key || process.env.HOOKDECK_API_KEY;
         const source_name = result.source_name;
-
         if (!source_name) {
           console.error(
             "Hookdeck Source name doesn't found. You must include it in your hookdeck.config.js file.",
@@ -116,7 +112,6 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
           // to pick out the right connection
           for (const entry of array) {
             if (!!entry.id && !used_connection_ids.includes(entry.id)) {
-              const api_key = entry.api_key || process.env.HOOKDECK_API_KEY;
               const source_name = entry.source_name;
               promises.push(forwardToHookdeck(request, api_key, source_name, pathname));
               used_connection_ids.push(entry.id);
@@ -221,3 +216,14 @@ async function forwardToHookdeck(
 
   return fetch(`${AUTHENTICATED_ENTRY_POINT}${pathname}`, options);
 }
+
+const slugify = (text: string): string =>
+  text
+    .toString()
+    .toLowerCase()
+    .replace(/\//g, '-') // Replace / with -
+    .replace(/\s+/g, '-') // Replace spaces with -
+    .replace(/[^\w\-]+/g, '') // Remove all non-word chars
+    .replace(/\-\-+/g, '-') // Replace multiple - with single -
+    .replace(/^-+/, '') // Trim - from start of text
+    .replace(/-+$/, ''); // Trim - from end of text
