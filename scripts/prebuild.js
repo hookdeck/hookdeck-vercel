@@ -4,7 +4,6 @@ const path = require('path');
 const process = require('process');
 const crypto = require('crypto');
 const hookdeckConfig = require('../hookdeck.config');
-const { match, api_key: _api_key, signing_secret: _signing_secret, vercel_url } = hookdeckConfig;
 
 const LIBRARY_NAME = '@hookdeck/vercel';
 const WRAPPER_NAME = 'withHookdeck';
@@ -20,15 +19,17 @@ async function checkPrebuild() {
       return false;
     }
 
+    const { match, api_key, signing_secret, vercel_url } = hookdeckConfig;
+
     const connections = Object.entries(match).map((e) => {
       const key = e[0];
       const value = e[1];
       return Object.assign(value, {
-        api_key: _api_key || process.env.HOOKDECK_API_KEY,
-        signing_secret: _signing_secret || process.env.HOOKDECK_SIGNING_SECRET,
+        api_key: api_key || process.env.HOOKDECK_API_KEY,
+        signing_secret: signing_secret || process.env.HOOKDECK_SIGNING_SECRET,
         host: vercel_url || `https://${process.env.VERCEL_BRANCH_URL}`,
         matcher: key,
-        source_name: slugify(key),
+        source_name: value.name || slugify(key),
       });
     });
 

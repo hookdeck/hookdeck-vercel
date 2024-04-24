@@ -24,7 +24,7 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
         const value = e[1] as any;
         return Object.assign(value, {
           matcher: key,
-          source_name: slugify(key),
+          source_name: value.name || slugify(key),
         });
       });
 

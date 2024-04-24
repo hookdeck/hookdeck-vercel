@@ -15,7 +15,10 @@ interface HookdeckConfig {
     [key: string]: {
       // all attributes are optional
 
-      // Hookdeck basic functionallity
+      // source name
+      name?: string;
+
+      // Hookdeck basic functionality
       retry?: Omit<Hookdeck.RetryRule, 'type'>;
       delay?: number;
       filters?: Array<Omit<Hookdeck.FilterRule, 'type'>>;
