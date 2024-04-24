@@ -11,7 +11,7 @@ We will walk you through these steps:
 4. Deploy and Test
 5. Advanced Configuration
 6. Vercel Edge Middleware limitations
-7. Webhook signature verification
+7. Webhook Signature Verification
 
 ## 0. Overview and Architecture
 
@@ -68,14 +68,11 @@ guide](https://vercel.com/docs/functions/edge-middleware) to easily integrate in
 You have to change your middleware code from this:
 
 ```typescript
-import { NextFetchEvent } from 'next/server'
-// ... other imports
-
 export const config = {
     // your middleware config
 };
  
-export function middleware(request: Request, ctx: NextFetchEvent) {
+export function middleware(request: Request) {
     // ... your middleware logic
 }
 ```
@@ -83,9 +80,6 @@ export function middleware(request: Request, ctx: NextFetchEvent) {
 to this:
 
 ```typescript
-import { NextRequest, NextResponse, NextFetchEvent } from 'next/server'
-// ... other imports
-
 // add Hookdeck imports
 import { withHookdeck } from "@hookdeck/vercel";
 import hookdeckConfig from "./hookdeck.config";
@@ -95,23 +89,26 @@ export const config = {
 };
  
 // the middleware is not exported anymore
-function middleware(request: NextRequest, ctx: NextFetchEvent) {
+function middleware(request: Request) {
     // ... your middleware logic
-    // return NextResponse.next() to manage a request with Hookdeck
+    // return `NextResponse.next()` or `next()` to manage the request with Hookdeck
 }
 
 // wrap the middleware with Hookdeck wrapper
 export default withHookdeck(hookdeckConfig, middleware);
 ```
 
-Whenever your Edge Middleware is triggered (because your middleware config matches) then the withHookdeck wrapper acts like this:
+When your Edge Middleware is triggered (because your middleware config matches), the `withHookdeck` wrapper acts like this:
 
-- If there is no config file or none of the entries inside `hookdeck.config.js` matches the route, then your `middleware function` is invoked as is. 
-- If there is one or more matches with the entries of `hookdeck.config.js` then there are 3 possible cases:
-1) The received request has not been processed by Hookdeck (yet). In this case, your `middleware function` is invoked to obtain a `response`. If is a NextResponse.next() type, then the request is bounced back to Hookdeck. 
-*NOTE*: If you are not using next/server or @vercel/edge, the just return a new `Response` with a header `x-middleware-next` with value `"1"` if you want yo want the Hookdeck integration package to manage your request.
+- If there is no config file or none of the entries inside `hookdeck.config.js` matches the route, then your `middleware` function is invoked as is.
 
-2) The received request comes from Hookdeck and has been processed. Then the request is sent to the final route or url you specified. Your `middleware function` code will not be executed this time.
+- If there're matches with the entries of `hookdeck.config.js` then the following can happen:
+
+ 1. The received request has not been processed by Hookdeck (yet). In this case, your `middleware` function is invoked to obtain a `response`. If the returned value from your `middleware` is `NextResponse.next()` or `next()`, then the request is bounced back to Hookdeck. 
+
+*NOTE*: If you are not using neither `next/server` nor `@vercel/edge`, the just return a new `Response` with a header `x-middleware-next` with value `"1"` if you want you want Hookdeck to manage your request.
+
+ 2. The received request comes from Hookdeck and has been processed. Then the request is sent to the final route or url you specified. Your `middleware` function code will not be executed this time.
 
 
 ## 4. Deploy and Test
@@ -120,54 +117,59 @@ The first time you install the `@hookdeck/vercel`, a `hookdeck.config.js` file i
 
 ```javascript
 module.exports = {
-   '<source_name>': {
-    matcher: '',
-
-    // all fields below this line are optional:
-    host: '',
-    retry: {
-      strategy: 'exponential',
-      count: 0,
-      interval: 0,
+  vercel_url: '', // optional Uses `VERCEL_BRANCH_URL` env var as default.
+  match : {
+    '</path/to/match>': {
+      // all fields are optional
+      retry: {},
+      delay: 0,
+      filters: [],
+      delivery_rate: {},
+      verification: {},
+      custom_response: {},
     },
-    delay: 0,
-    alert: '',
-    filters: [
-      {
-        headers: {},
-        body: {},
-        query: {},
-        path: {},
-      },
-    ],
-    // source configuration
-    custom_response: {},
-    verification: {},
-    // destination configuration
-    url: '',
-    delivery_rate: {
-      limit: 100,
-      period: 'minute',
-    },
-    http_method: '',
-    auth_method: {},
-  },
+  }
 };
 ```
 
-This file exports de configuration for one or more sources. If you have configured your Hookdeck API key as an environment variable, then you only need the following fields for your connections:
+This file exports de configuration for one or more potential matches. If you have configured your Hookdeck API key as an environment variable, then you only need the following fields for your connections:
 
-- `<source_name>` (*key*): The name of the source that will receive the request. You don't have to create it previously in the Hookdecks dashboard, as the package automatically creates it when necessary. Important: spaces are not allowed, use only alphanumeric characters, along with score `-` and underscore `_`.
-- `matcher`: the matching string or regex that will be compared or tested against the pathname of the url that triggered the middleware. If there is more than one match, then the request is sent to every matching source.
+- `/path/to/match`: the matching string or regex that will be compared or tested against the pathname of the url that triggered the middleware. If there is more than one match, then the request is sent to every matching configuration.
 
-> IMPORTANT: if you export a `config` in your `middleware` file, make sure that your middleware's `matcher` configuration includes the routes specified in the Hookdeck's `matcher` fields. Only routes that match the `matcher` will trigger the middleware, and therefore the `withHookDeck` functionality.
+> IMPORTANT: if you export a `config` in your `middleware` file, make sure that your middleware's `matcher` configuration includes the routes specified in the Hookdeck's `match` fields. Only routes that match both expressions will trigger the Hookdeck functionality.
 
 So the minimum valid content for `hookdeck.config.js` would be something like this:
 
 ```javascript
 module.exports = {
-   'my-source-name': {
-      matcher: 'foo/bar',
+  '/api/webhook': {
+  },
+};
+```
+
+A more elaborated configuration, including request delay, retry and delivery rate, would be something like:
+
+```javascript
+const {
+  RetryStrategy,
+  DestinationRateLimitPeriod,
+} = require('@hookdeck/sdk/api');
+
+module.exports = {
+  vercel_url: 'https://my-vercel-project-eta-five-30.vercel.app',
+  match: {
+    '/api/webhook': {
+      retry: {
+        strategy: RetryStrategy.Linear,
+        count: 5,
+        interval: 15000, // in ms
+      },
+      delay: 30000, // in ms
+      delivery_rate: {
+        limit: 100,
+        period: DestinationRateLimitPeriod.Minute,
+      },
+    },
   },
 };
 ```
@@ -187,8 +189,7 @@ In case of advanced scenarios, you may need any of these configuration keys to u
 - `api_key`: You can specify a Hookdeck API key for every single connection. It will have priority over the general env variable `HOOKDECK_API_KEY`. It's better to use Vercel's env variable insterad of this configuration key. This key is intented for complex setups involving several [Hookdeck organizations](https://hookdeck.com/docs/organizations) or even accounts.
 - `signing_secret`: You can specify a Hookdeck Signing Secret for every single connection. It will have priority over the general env variable `HOOKDECK_SIGNING_SECRET`. It's better to use Vercel's env variable insterad of this configuration key. This key is intented for [webhook signature verification](https://hookdeck.com/docs/authentication#hookdeck-webhook-signature-verification).
 
-- `host`: The Vercel's host that can receive the requests. If not specified, the host stored in env var `VERCEL_BRANCH_URL` will be used.
-- `url`: hardcoded url to use to forward back the event. The recommended method is to use the `host` key. This configuration is intended for complex scenarios that involve other systems on top of Vercel and Hookdeck.
+- `vercel_url`: The Vercel's url that can receive the requests. If not specified, the host stored in env var `VERCEL_BRANCH_URL` will be used.
 
 - `retry`: use the values specified in the [Retry documentation](https://hookdeck.com/docs/api#retry) to configura Hookdeck's retry strategy.
 - `delay`: the number of milliseconds to hold the event when it arrives to Hookdeck.
@@ -202,6 +203,6 @@ In case of advanced scenarios, you may need any of these configuration keys to u
 
 If you have multiple entries in the config file with the same `matcher`, be aware that the middleware will send the request via `fetch` call once per match and will try to do that in paralell. This heavy use is not a common case, but please check [Edge Middleware Limitations](https://vercel.com/docs/functions/edge-middleware/limitations) if you are in this scenario.
 
-## 7. Webhook signature verification
+## 7. Webhook Signature Verification
 
 It is good practice to verify the signature of the requests that arrive at your Middleware. To ensure that the requests processed from Hookdeck are authentic, include your [Signing Secret](https://dashboard.hookdeck.com/settings/project/secrets) as an environment variable in your Vercel project with the name `HOOKDECK_SIGNING_SECRET`.
