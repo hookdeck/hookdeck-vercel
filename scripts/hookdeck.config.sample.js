@@ -23,7 +23,7 @@ const hookdeckConfig = {
           path: {},
         },
       ],
-      delivery_rate: {
+      rate: {
         limit: 100,
         period: DestinationRateLimitPeriod.Minute,
       },

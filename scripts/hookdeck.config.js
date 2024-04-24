@@ -7,7 +7,7 @@ const hookdeckConfig = {
       retry: {},
       delay: 0,
       filters: [],
-      delivery_rate: {},
+      rate: {},
       verification: {},
       custom_response: {},
     },

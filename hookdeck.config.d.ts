@@ -19,7 +19,7 @@ interface HookdeckConfig {
       retry?: Omit<Hookdeck.RetryRule, 'type'>;
       delay?: number;
       filters?: Array<Omit<Hookdeck.FilterRule, 'type'>>;
-      delivery_rate?: DeliveryRate;
+      rate?: DeliveryRate;
 
       // source verification
       verification?: Hookdeck.SourceVerification;

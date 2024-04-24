@@ -220,8 +220,8 @@ async function autoCreateConnection(api_key, config) {
   if (!!config.auth_method) {
     data.destination.auth_method = config.auth_method;
   }
-  if (!!config.delivery_rate) {
-    data.destination.delivery_rate = config.delivery_rate;
+  if (!!config.rate) {
+    data.destination.delivery_rate = config.rate;
   }
 
   try {
@@ -391,7 +391,7 @@ async function updateConnection(api_key, config) {
       config.path_forwarding_disabled !== null ||
       (config.http_method || null) !== null ||
       (config.auth_method || null) !== null ||
-      (config.delivery_rate || null) !== null
+      (config.rate || null) !== null
     ) {
       const destination_id = json.destination.id;
       await updateDestination(api_key, destination_id, config);
@@ -450,9 +450,9 @@ async function updateDestination(api_key, id, config) {
   if ((config.auth_method || null) !== null) {
     data.auth_method = config.auth_method;
   }
-  if ((config.delivery_rate || null) !== null) {
-    data.rate_limit = config.delivery_rate.limit;
-    data.rate_limit_period = config.delivery_rate.period;
+  if ((config.rate || null) !== null) {
+    data.rate_limit = config.rate.limit;
+    data.rate_limit_period = config.rate.period;
   }
 
   const url = `${API_ENDPOINT}/destinations/${id}`;

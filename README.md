@@ -124,7 +124,7 @@ module.exports = {
       retry: {},
       delay: 0,
       filters: [],
-      delivery_rate: {},
+      rate: {},
       verification: {},
       custom_response: {},
     },
@@ -147,7 +147,7 @@ module.exports = {
 };
 ```
 
-A more elaborated configuration, including request delay, retry and delivery rate, would be something like:
+A more elaborated configuration, including request delay, retry and a rate of delivery, would be something like:
 
 ```javascript
 const {
@@ -165,7 +165,7 @@ module.exports = {
         interval: 15000, // in ms
       },
       delay: 30000, // in ms
-      delivery_rate: {
+      rate: {
         limit: 100,
         period: DestinationRateLimitPeriod.Minute,
       },
@@ -194,7 +194,7 @@ In case of advanced scenarios, you may need any of these configuration keys to u
 - `retry`: use the values specified in the [Retry documentation](https://hookdeck.com/docs/api#retry) to configura Hookdeck's retry strategy.
 - `delay`: the number of milliseconds to hold the event when it arrives to Hookdeck.
 - `filters`: specify different filters to exclude some events from forwarding. Use the syntax specified in the [Filter documentation](https://hookdeck.com/docs/api#filter). For an overview of Filters, check this [Filters guide](https://hookdeck.com/docs/filters).
-- `delivery_rate`: set the contention rate to be used for the outcoming traffic. Check the syntax in the `rate_limit_period` key in the [Destination documentation](https://hookdeck.com/docs/api#destination-object).
+- `rate`: set the delivery rate to be used for the outcoming traffic. Check the syntax in the `rate_limit_period` key in the [Destination documentation](https://hookdeck.com/docs/api#destination-object).
 
 - `verification`: inbound (source) verification mechanism to use. Check all possible values and syntax in the [Source documentation](https://hookdeck.com/docs/api#source-object).
 - `custom_response`: the custom response to send back the webhook origin. Check the syntax in the [Source documentation](https://hookdeck.com/docs/api#source-object).
