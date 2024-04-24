@@ -1,15 +1,16 @@
 const appRoot = require('app-root-path');
 const fs = require('fs');
 const path = require('path');
-const { exit } = require('process');
+const process = require('process');
+const crypto = require('crypto');
 const hookdeckConfig = require('../hookdeck.config');
-const { createHash } = require('crypto');
+const { match, api_key: _api_key, signing_secret: _signing_secret, vercel_url } = hookdeckConfig;
 
 const LIBRARY_NAME = '@hookdeck/vercel';
 const WRAPPER_NAME = 'withHookdeck';
 const TUTORIAL_URL = 'https://hookdeck.com/docs';
 
-const { HookdeckEnvironment } = require('@hookdeck/sdk');
+const HookdeckEnvironment = require('@hookdeck/sdk').HookdeckEnvironment;
 const API_ENDPOINT = HookdeckEnvironment.Default;
 
 async function checkPrebuild() {
@@ -19,13 +20,13 @@ async function checkPrebuild() {
       return false;
     }
 
-    const connections = Object.entries(hookdeckConfig.match).map((e) => {
+    const connections = Object.entries(match).map((e) => {
       const key = e[0];
       const value = e[1];
       return Object.assign(value, {
-        api_key: hookdeckConfig.api_key || process.env.HOOKDECK_API_KEY,
-        signing_secret: hookdeckConfig.signing_secret || process.env.HOOKDECK_SIGNING_SECRET,
-        host: hookdeckConfig.vercel_url || `https://${process.env.VERCEL_BRANCH_URL}`,
+        api_key: _api_key || process.env.HOOKDECK_API_KEY,
+        signing_secret: _signing_secret || process.env.HOOKDECK_SIGNING_SECRET,
+        host: vercel_url || `https://${process.env.VERCEL_BRANCH_URL}`,
         matcher: key,
         source_name: slugify(key),
       });
@@ -40,7 +41,7 @@ async function checkPrebuild() {
 
     console.log('hookdeck.config.js is valid');
 
-    const env_configs = [];
+    // const env_configs = [];
     const created_connections_pseudo_keys = {};
     for (const conn_config of connections) {
       const has_connection_id = !!conn_config.id;
@@ -50,7 +51,7 @@ async function checkPrebuild() {
         connection = await updateConnection(conn_config.api_key, conn_config);
       } else {
         // avoid creating identical connections
-        const pseudo_key = `${conn_config.api_key}*${conn_config.source_name}*${conn_config.host}`;
+        const pseudo_key = `${conn_config.api_key}*${conn_config.source_name}`;
         const cached_connection_id = created_connections_pseudo_keys[pseudo_key] || null;
 
         if (cached_connection_id) {
@@ -59,19 +60,33 @@ async function checkPrebuild() {
             Object.assign({ connection_id: cached_connection_id }, conn_config),
           );
         } else {
-          connection = await autoCreateConnection(conn_config.api_key, conn_config);
+          const source = await getSourceByName(conn_config.api_key, conn_config.source_name);
+          if (source) {
+            const dest_url = getDestinationUrl(conn_config);
+            const destination = await getDestinationByUrl(conn_config.api_key, dest_url);
+            if (destination) {
+              connection = await getConnectionWithSourceAndDestination(
+                conn_config.api_key,
+                source,
+                destination,
+              );
+              if (connection) {
+                connection = await updateConnection(
+                  conn_config.api_key,
+                  Object.assign({ connection_id: cached_connection_id }, conn_config),
+                );
+              }
+            }
+          }
+          if (!connection) {
+            connection = await autoCreateConnection(conn_config.api_key, conn_config);
+          }
           created_connections_pseudo_keys[pseudo_key] = connection.id;
         }
       }
-      env_configs.push({
-        connection,
-        config: conn_config,
-      });
 
       console.log('Hookdeck connection configured successfully', connection.source.url);
     }
-
-    saveCurrentConfig({ connections: env_configs });
 
     console.log('Hookdeck successfully configured');
     return true;
@@ -117,7 +132,7 @@ function getDestinationUrl(config) {
 function getConnectionName(config) {
   const dest_url = getDestinationUrl(config);
   const valueToHash = `${config.source_name}*${dest_url}*${config.matcher}`;
-  return createHash('sha256').update(valueToHash).digest('hex');
+  return crypto.createHash('sha256').update(valueToHash).digest('hex');
 }
 
 function getConnectionRules(config) {
@@ -251,34 +266,8 @@ function manageResponseError(response, body) {
   process.exit(1);
 }
 
-function saveCurrentConfig({ connections }) {
-  // Updates the hookdeck.config.js file with the current connection ids
-  //
-  // TODO instead of overwriting `hookdeck.config.js`, create a new file called
-  // `hookdeck.config.lock.js` and use it from the wrapper.
-  try {
-    const destinationPath = path.join(`${appRoot}`, `hookdeck.config.js`);
-
-    const updated_config = {};
-    for (const conn of connections) {
-      updated_config[conn.config.source_name] = Object.assign(conn.config, {
-        id: conn.connection.id,
-        source_id: conn.connection.source.id,
-        destination_id: conn.connection.destination.id,
-      });
-    }
-
-    const content = JSON.stringify(updated_config, null, 2);
-    const text = `module.exports = ${content};`;
-    fs.writeFileSync(destinationPath, text, 'utf-8');
-    console.log('Saved hookdeck.config.js', text);
-  } catch (e) {
-    manageError(e);
-  }
-}
-
 function readMiddlewareFile(basePath) {
-  const extensions = ['js', 'mjs', 'ts']; // Add more if needed
+  const extensions = ['js', 'mjs', 'ts']; // Supported by now
   for (const ext of extensions) {
     const filePath = `${basePath}.${ext}`;
     try {
@@ -323,18 +312,18 @@ function validateMiddleware() {
   }
 }
 
-function validateConfig(hookdeckConfig) {
-  if (!hookdeckConfig) {
+function validateConfig(config) {
+  if (!config) {
     console.error(
       `Usage of ${LIBRARY_NAME} detected but hookdeck.config.js could not be imported. Please follow the steps in ${TUTORIAL_URL} to export the hookdeckConfig object`,
     );
     return false;
   }
 
-  const api_key = hookdeckConfig.api_key || process.env.HOOKDECK_API_KEY;
+  const api_key = config.api_key || process.env.HOOKDECK_API_KEY;
   if (!api_key) {
     console.error(
-      `Hookdeck's API key doesn't found. You must set it as a env variable named HOOKDECK_API_KEY or include it in your hookdeck.config.js. Check ${TUTORIAL_URL} for more info.`,
+      `Hookdeck's API key not found. You must set it as a env variable named HOOKDECK_API_KEY or include it in your hookdeck.config.js. Check ${TUTORIAL_URL} for more info.`,
     );
     return false;
   }
@@ -343,22 +332,16 @@ function validateConfig(hookdeckConfig) {
     return false;
   }
 
-  if (!(hookdeckConfig.signing_secret || process.env.HOOKDECK_SIGNING_SECRET)) {
+  if (!(config.signing_secret || process.env.HOOKDECK_SIGNING_SECRET)) {
     console.warn(
       "Signing secret key is not present neither in `hookdeckConfig.signing_secret` nor `process.env.HOOKDECK_SIGNING_SECRET`. You won't be able to validate webhooks' signatures. " +
         `Please follow the steps in ${TUTORIAL_URL}.`,
     );
   }
 
-  if (!hookdeckConfig.vercel_url) {
+  if (!config.vercel_url && !process.env.VERCEL_BRANCH_URL) {
     console.info(
-      'Vercel url not present in `hookdeckConfig.vercel_url`. Using fallback value `process.env.HOOKDECK_SIGNING_SECRET`',
-    );
-  }
-
-  if (!process.env.VERCEL_BRANCH_URL) {
-    console.error(
-      'Vercel url not present `process.env.VERCEL_BRANCH_URL`. ' +
+      'Vercel url not present in config file nor in `process.env.VERCEL_BRANCH_URL`. ' +
         `Please follow the steps in ${TUTORIAL_URL}.`,
     );
     return false;
@@ -500,4 +483,82 @@ function slugify(text) {
     .replace(/\-\-+/g, '-') // Replace multiple - with single -
     .replace(/^-+/, '') // Trim - from start of text
     .replace(/-+$/, ''); // Trim - from end of text
+}
+
+async function getConnectionWithSourceAndDestination(api_key, source, destination) {
+  try {
+    const url = `${API_ENDPOINT}/connections?source_id=${source.id}&destination_id=${destination.id}`;
+    const response = await fetch(url, {
+      method: 'GET',
+      mode: 'cors',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${api_key}`,
+      },
+      credentials: 'include',
+    });
+    if (response.status !== 200) {
+      manageResponseError(response);
+      return null;
+    }
+    const json = await response.json();
+    if (json.models.length === 0) {
+      return null;
+    }
+    return json.models[0];
+  } catch (e) {
+    manageError(e);
+  }
+}
+
+async function getSourceByName(api_key, source_name) {
+  try {
+    const url = `${API_ENDPOINT}/sources?name=${source_name}`;
+    const response = await fetch(url, {
+      method: 'GET',
+      mode: 'cors',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${api_key}`,
+      },
+      credentials: 'include',
+    });
+    if (response.status !== 200) {
+      manageResponseError(response);
+      return null;
+    }
+    const json = await response.json();
+    if (json.models.length === 0) {
+      return null;
+    }
+    return json.models[0];
+  } catch (e) {
+    manageError(e);
+  }
+}
+
+async function getDestinationByUrl(api_key, destination_url) {
+  try {
+    const url = `${API_ENDPOINT}/destinations?url=${encodeURI(destination_url)}`;
+    const response = await fetch(url, {
+      method: 'GET',
+      mode: 'cors',
+      headers: {
+        Authorization: `Bearer ${api_key}`,
+      },
+      credentials: 'include',
+    });
+    if (response.status !== 200) {
+      console.error(`Error getting destination by url ${destination_url}`);
+      manageResponseError(response);
+      return null;
+    }
+    const json = await response.json();
+    if (json.models.length === 0) {
+      return null;
+    }
+    return json.models[0];
+  } catch (e) {
+    manageError(e);
+  }
 }
