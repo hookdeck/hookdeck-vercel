@@ -9,6 +9,7 @@ const hookdeckConfig = {
   match: {
     '/path/to/match': {
       // all fields below this line are optional
+      name: 'my-source',
       retry: {
         strategy: RetryStrategy.Linear,
         count: 0,

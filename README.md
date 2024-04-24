@@ -159,6 +159,7 @@ module.exports = {
   vercel_url: 'https://my-vercel-project-eta-five-30.vercel.app',
   match: {
     '/api/webhook': {
+      name: 'my-webhook-source-name',
       retry: {
         strategy: RetryStrategy.Linear,
         count: 5,
