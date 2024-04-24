@@ -18,7 +18,7 @@ interface HookdeckConfig {
       // Hookdeck basic functionallity
       retry?: Omit<Hookdeck.RetryRule, 'type'>;
       delay?: number;
-      filter?: Omit<Hookdeck.FilterRule, 'type'>;
+      filters?: Array<Omit<Hookdeck.FilterRule, 'type'>>;
       delivery_rate?: DeliveryRate;
 
       // source verification
