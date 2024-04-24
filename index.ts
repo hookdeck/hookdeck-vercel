@@ -139,16 +139,13 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
 }
 
 function getPathnameWithFallback(request: any): string {
-  // try with Next's object
-  let pathname = request.nextUrl;
-  if (!pathname) {
-    // try with vanilla's request object
-    const url = request.url;
-    if (url) {
-      pathname = new URL(url).pathname;
-    }
+  // try with Next's or vanilla object
+  const url = request.nextUrl || request.url;
+  if (!url) {
+    return '';
   }
-  return pathname ?? '';
+
+  return url.pathname || '';
 }
 async function verifyHookdeckSignature(request, secret: string | undefined): Promise<boolean> {
   const signature1 = (request.headers ?? {})[HOOKDECK_SIGNATURE_HEADER_1];
