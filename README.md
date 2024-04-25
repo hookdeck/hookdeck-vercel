@@ -2,6 +2,26 @@
 
 The Hookdeck Vercel Middleware adds the ability to authenticate, delay, filter, queue, throttle, and retry requests made to a Vercel application.
 
+## Get Started
+
+Before you begin:
+
+- Create a [Vercel](https://vercel.com/) account and a project.
+- [Signup for a Hookdeck account](https://dashboard.hookdeck.com/signup) and create your Hookdeck project.
+- Get the Hookdeck API key from your [project secrets](https://dashboard.hookdeck.com/settings/project/secrets).
+- Add `HOOKDECK_API_KEY` with a value of your Hookdeck API key as an [env variable](https://vercel.com/docs/projects/environment-variables)
+  for your project.
+
+Install the Hookdeck Vercel package:
+
+```bash
+npm i @hookdeck/vercel
+```
+
+> Once installed the `"` package a `hookdeck.config.js` file and a `.hookdeck` directory are created at the root of your project. Also, the command `node .hookdeck/prebuild.js` is appended to the `prebuild` script of your `package.json`.
+
+---
+
 In this quickstart, you'll learn how to add HTTP request authentication, integrate Hookdeck seamlessly in your Vercel project. If you are already using URLs of your Vercel project as a webhooks, you don't have to change your code: you will continue receiving the requests, but from Hookdeck (with all the features you may need, such as retries, authentication, transformations, etc).
 
 We will walk you through these steps:
@@ -14,96 +34,51 @@ We will walk you through these steps:
 5. Advanced Configuration
 6. Vercel Edge Middleware limitations
 
-## 0. Overview and Architecture
-
-Using Hookdeck's Vercel middleware integration, you will be able to turn your Vercel's routes into asynchronous endpoints, taking all the advantage of Hookdeck's benefits.
-
-This package acts in deploy time, checking a configuration file before your project is built:
-
-![Build time](./img/build_time.jpg)
-
-And acts also in runtime by sending to Hookdeck the requests that matches your configuration:
-
-![Run time](./img/run_time.jpg)
-
-
-## 1. Prerequisites
-
-  - [Signup for a Hookdeck account](https://dashboard.hookdeck.com/signup) and create your Hookdeck project.
-  - Get the API key from your [project secrets](https://dashboard.hookdeck.com/settings/project/secrets).
-  - Have a [Vercel](https://vercel.com/) account and a project. If you don't have one, follow the [Vercel docs](https://vercel.com/docs) to create one.
-  - Set the Hookdeck API key you obtained before as a [env variable](https://vercel.com/docs/projects/environment-variables)
-for your project. The name of the environment variable must be `HOOKDECK_API_KEY`. Note: you can specify different Hookdeck API keys for your connections. See the advanced configuration section of this guide to know how.
-
-
-## 2. Installation
-
-In your Vercel project, open a terminal and add the `vercel-integration-demo` package using your prefered package manager:
-
-### NPM
-
-```bash
-npm install --save-dev vercel-integration-demo
-```
-
-### YARN
-
-```bash
-yarn add --dev vercel-integration-demo
-```
-
-you can also add the `vercel-integration-demo` package manually to dev dependencies on your `package.json` file.
-
-> Once installed the `vercel-integration-demo` package a `hookdeck.config.js` file and a `.hookdeck` directory are created at the root of your project. Also, the command `node .hookdeck/prebuild.js` is appended to the `prebuild` script of your `package.json`.
-
-
 ## 3. Configuration
 
 The `vercel-integration-demo` package is supported in the [Vercel's Edge
-Middleware](https://vercel.com/docs/functions/edge-middleware) code, that executes before a request is processed on your site. This way, the request can be fordwarded to Hookdeck and then received again by your specified endpoint, but with all the extra features you may need from Hookdeck such as retry strategies and transformations.
+Middleware](https://vercel.com/docs/functions/edge-middleware) code, that executes before a request is processed on your site. This way, the request can be forwarded to Hookdeck and then received again by your specified endpoint, but with all the extra features you may need from Hookdeck such as retry strategies and transformations.
 
 If you have not implemented Vercel Edge Middleware, check this [quick start
 guide](https://vercel.com/docs/functions/edge-middleware) to easily integrate into your project.
 
-
 You have to change your middleware code from this:
 
 ```typescript
-import { NextFetchEvent } from 'next/server'
+import { NextFetchEvent } from 'next/server';
 // ... other imports
 
 export const config = {
-    // your middleware config
+  // your middleware config
 };
- 
+
 export function middleware(request: Request, ctx: NextFetchEvent) {
-    // ... your middleware logic
+  // ... your middleware logic
 }
 ```
 
 to this:
 
 ```typescript
-import { NextFetchEvent } from 'next/server'
+import { NextFetchEvent } from 'next/server';
 // ... other imports
 
 // add Hookdeck imports
-import { withHookdeck } from "vercel-integration-demo";
-import hookdeckConfig from "./hookdeck.config";
+import { withHookdeck } from 'vercel-integration-demo';
+import hookdeckConfig from './hookdeck.config';
 
 export const config = {
-    // your middleware config
+  // your middleware config
 };
- 
+
 // the middleware is not exported anymore
 function middleware(request: Request, ctx: NextFetchEvent) {
-    // ... your middleware logic
+  // ... your middleware logic
 }
 
 // wrap the middleware with Hookdeck wrapper
 export default withHookdeck(hookdeckConfig, middleware);
 ```
-
 
 ## 4. Deploy and Test
 
@@ -111,7 +86,7 @@ The first time you install the `vercel-integration-demo`, a `hookdeck.config.js`
 
 ```javascript
 module.exports = {
-   '<source_name>': {
+  '<source_name>': {
     matcher: '',
 
     // all fields below this line are optional:
@@ -153,7 +128,7 @@ module.exports = {
 
 This file exports de configuration for one or more sources. If you have configured your Hookdeck API key as an environment variable, then you only need the following fields for your connections:
 
-- `<source_name>` (*key*): The name of the source that will receive the request. You don't have to create it previously in the Hookdecks dashboard, as the package automatically creates it when necessary. Important: spaces are not allowed, use only alphanumeric characters, along with score `-` and underscore `_`.
+- `<source_name>` (_key_): The name of the source that will receive the request. You don't have to create it previously in the Hookdecks dashboard, as the package automatically creates it when necessary. Important: spaces are not allowed, use only alphanumeric characters, along with score `-` and underscore `_`.
 - `matcher`: the matching string or regex that will be compared or tested against the pathname of the url that triggered the middleware. If there is more than one match, then the request is sent to every matching source.
 
 > IMPORTANT: if you export a `config` in your `middleware` file, make sure that your middleware's `matcher` configuration includes the routes specified in the Hookdeck's `matcher` fields. Only routes that match the `matcher` will trigger the middleware, and therefore the `withHookDeck` functionality.
@@ -162,8 +137,8 @@ So the minimum valid content for `hookdeck.config.js` would be something like th
 
 ```javascript
 module.exports = {
-   'my-source-name': {
-      matcher: 'foo/bar',
+  'my-source-name': {
+    matcher: 'foo/bar',
   },
 };
 ```
@@ -171,7 +146,6 @@ module.exports = {
 You can test your configuration commiting the `hookdeck.config.js` to your repo, and [deploying](https://vercel.com/docs/deployments/overview) as usual to Vercel. If something is not correct with the configuration file or your Hookdeck API key, the build will fail as a mechanism to ensure that your Hookdeck connections are ready when your build is.
 
 If you send a request to your normal Vercel's url, it will be forwared to Hookdeck, and eventually will go back again to Vercel's function.
-
 
 ## 5. Advanced Configuration
 
@@ -193,6 +167,35 @@ In case of advanced scenarios, you may need any of these configuration keys to u
 - `http_method`: the HTTP method to use in the outcoming requests. If not specified, the same method will be kept.
 - `auth_method`: outbound (destination) authentication mechanism to use. Check all possible values and syntax in the [Destination documentation](https://hookdeck.com/docs/api#destination-object).
 
-## 6. Vercel Edge Middleware limitations
+## How the Hookdeck Vercel Works
+
+Using Hookdeck's Vercel middleware integration, you will be able to turn your Vercel's routes into asynchronous endpoints, taking all the advantage of Hookdeck's benefits.
+
+This package acts in deploy time, checking a configuration file before your project is built:
+
+![Build time](./img/build_time.jpg)
+
+And acts also in runtime by sending to Hookdeck the requests that matches your configuration:
+
+![Run time]Considerations and Limitations
+
+### Removing the Middleware and Going Direct to Hookdeck
+
+The Hookdeck Vercel middleware adds an additional hop to every process request, so if milliseconds are a factor in processing requests, you may want to use Hookdeck directly and not use the middleware.
+
+With the Hookdeck Vercel Middleware:
+
+1. Request to Vercel URL
+2. Redirect request to Hookdeck
+3. Request to Vercel URL (which the middleware passes through)
+
+Without the Hookdeck Vercel Middleware:
+
+1. Request to Hookdeck Source URL
+2. Request to Vercel URL
+
+You can remove the middleware by uninstalling and removing any configuration and directly using the [Hookdeck Source](https://hookdeck.com/docs/sources) URL where you previously used the Vercel URL, for example, as your Stripe or Shopify webhook URL.
+
+### Parallel Matching
 
 If you have multiple entries in the config file with the same `matcher`, be aware that the middleware will send the request via `fetch` call once per match and will try to do that in paralell. This heavy use is not a common case, but please check [Edge Middleware Limitations](https://vercel.com/docs/functions/edge-middleware/limitations) if you are in this scenario.
