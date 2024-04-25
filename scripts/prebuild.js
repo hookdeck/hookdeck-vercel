@@ -239,7 +239,6 @@ async function autoCreateConnection(api_key, config) {
     });
     if (response.status !== 200) {
       manageResponseError('Error getting connections', response, JSON.stringify(data));
-      return null;
     }
     const json = await response.json();
     console.log('Connection created', json);
@@ -371,9 +370,7 @@ async function updateConnection(api_key, id, config) {
       body: JSON.stringify(data),
     });
     if (response.status !== 200) {
-      console.error();
       manageResponseError(`Error updating connection with ID ${id}`, JSON.stringify(data));
-      return null;
     }
     const json = await response.json();
     console.log('Connection updated', json);
@@ -432,7 +429,11 @@ async function updateSource(api_key, id, config) {
     body: JSON.stringify(data),
   });
   if (response.status !== 200) {
-    throw new Error(`Error while updating source with ID ${id}`);
+    manageResponseError(
+      `Error while updating source with ID ${id}`,
+      response,
+      JSON.stringify(data),
+    );
   }
   const json = await response.json();
   console.log('Source updated', json);
@@ -466,7 +467,11 @@ async function updateDestination(api_key, id, config) {
     body: JSON.stringify(data),
   });
   if (response.status !== 200) {
-    throw new Error(`Error while updating destination with ID ${id}`);
+    manageResponseError(
+      `Error while updating destination with ID ${id}`,
+      response,
+      JSON.stringify(data),
+    );
   }
   const json = await response.json();
   console.log('Destination updated', json);
@@ -501,7 +506,6 @@ async function getConnectionWithSourceAndDestination(api_key, source, destinatio
         `Error getting connection for source ${source.id} and destination ${destination.id}`,
         response,
       );
-      return null;
     }
     const json = await response.json();
     if (json.models.length === 0) {
@@ -532,7 +536,6 @@ async function getSourceByName(api_key, source_name) {
     });
     if (response.status !== 200) {
       manageResponseError(`Error getting source '${source_name}'`, response);
-      return null;
     }
     const json = await response.json();
     if (json.models.length === 0) {
@@ -559,7 +562,6 @@ async function getDestinationByName(api_key, name) {
     });
     if (response.status !== 200) {
       manageResponseError(`Error getting destination by name ${name}`, response);
-      return null;
     }
     const json = await response.json();
     if (json.models.length === 0) {
