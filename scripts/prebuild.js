@@ -47,7 +47,6 @@ async function checkPrebuild() {
 
     console.log('hookdeck.config.js is valid');
 
-    // const env_configs = [];
     const created_connections_pseudo_keys = {};
     for (const conn_config of connections) {
       const has_connection_id = !!conn_config.id;
@@ -498,7 +497,10 @@ async function getConnectionWithSourceAndDestination(api_key, source, destinatio
       credentials: 'include',
     });
     if (response.status !== 200) {
-      manageResponseError(`Error getting connection for source ${source.id} and destination ${destination.id}`, response);
+      manageResponseError(
+        `Error getting connection for source ${source.id} and destination ${destination.id}`,
+        response,
+      );
       return null;
     }
     const json = await response.json();
