@@ -1,15 +1,48 @@
+const {
+  RetryStrategy,
+  DestinationRateLimitPeriod,
+  SourceCustomResponseContentType,
+} = require('@hookdeck/sdk/api');
 
 const hookdeckConfig = {
-  vercel_url: '', // optional Uses `VERCEL_BRANCH_URL` env var as default.
+  vercel_url: '', // optional. Uses `VERCEL_BRANCH_URL` env var as default.
   match : {
     '/path/to/match': {
-      // all fields are optional
-      retry: {},
-      delay: 0,
-      filters: [],
-      rate: {},
-      verification: {},
-      custom_response: {},
+
+      // all these fields are optional
+      retry: {
+        strategy: RetryStrategy.Linear,
+        count: 5,
+        interval: 1 * 60 * 1000, // in milliseconds
+      },
+      delay: 1 * 60 * 1000, // in milliseconds
+      filters: [
+        {
+          headers: {
+            'x-my-header': 'my-value',
+          },
+          body: {},
+          query: {},
+          path: {},
+        },
+      ],
+      rate: {
+        limit: 10,
+        period: DestinationRateLimitPeriod.Seconds,
+      },
+
+      verification: {
+        type: 'API_KEY',
+        configs: {
+          header_key: 'x-my-api-key',
+          api_key: 'this-is-my-token',
+        }
+      },
+
+      custom_response: {
+        contentType: SourceCustomResponseContentType.Json,
+        body: '{"message": "Vercel handled the webhook using Hookdeck"}',
+      },
     },
   }
 };
