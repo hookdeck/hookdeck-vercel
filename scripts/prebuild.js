@@ -22,7 +22,7 @@ async function checkPrebuild() {
     const { match, api_key, signing_secret, vercel_url } = hookdeckConfig;
 
     const connections = [];
-    for (const e of Object.entries(config.match)) {
+    for (const e of Object.entries(match)) {
       const key = e[0];
       const value = e[1];
 
@@ -69,7 +69,10 @@ async function checkPrebuild() {
         } else {
           const source = await getSourceByName(conn_config.api_key, conn_config.source_name);
           if (source) {
-            const destination = await getDestinationByName(conn_config.api_key, conn_config.destination_name);
+            const destination = await getDestinationByName(
+              conn_config.api_key,
+              conn_config.destination_name,
+            );
             if (destination) {
               connection = await getConnectionWithSourceAndDestination(
                 conn_config.api_key,
