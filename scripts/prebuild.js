@@ -239,7 +239,7 @@ async function autoCreateConnection(api_key, config) {
       body: JSON.stringify(data),
     });
     if (response.status !== 200) {
-      manageResponseError(response, JSON.stringify(data));
+      manageResponseError('Error getting connections', response, JSON.stringify(data));
       return null;
     }
     const json = await response.json();
@@ -255,14 +255,14 @@ function manageError(error) {
   process.exit(1);
 }
 
-function manageResponseError(response, body) {
+function manageResponseError(msg, response, body) {
   switch (response.status) {
     case 401:
-      console.error('Invalid or expired hookdeck api_key', response.status, response.statusText);
+      console.error(`${msg}: Invalid or expired api_key`, response.status, response.statusText);
       break;
 
     default:
-      console.error('Error', response.status, response.statusText, body);
+      console.error(msg, response.status, response.statusText, body);
       break;
   }
   process.exit(1);
@@ -372,8 +372,8 @@ async function updateConnection(api_key, id, config) {
       body: JSON.stringify(data),
     });
     if (response.status !== 200) {
-      console.error('Error while updating connection with ID', id);
-      manageResponseError(response, JSON.stringify(data));
+      console.error();
+      manageResponseError(`Error updating connection with ID ${id}`, JSON.stringify(data));
       return null;
     }
     const json = await response.json();
@@ -498,7 +498,7 @@ async function getConnectionWithSourceAndDestination(api_key, source, destinatio
       credentials: 'include',
     });
     if (response.status !== 200) {
-      manageResponseError(response);
+      manageResponseError(`Error getting connection for source ${source.id} and destination ${destination.id}`, response);
       return null;
     }
     const json = await response.json();
@@ -529,7 +529,7 @@ async function getSourceByName(api_key, source_name) {
       credentials: 'include',
     });
     if (response.status !== 200) {
-      manageResponseError(response);
+      manageResponseError(`Error getting source '${source_name}'`, response);
       return null;
     }
     const json = await response.json();
@@ -556,8 +556,7 @@ async function getDestinationByName(api_key, name) {
       credentials: 'include',
     });
     if (response.status !== 200) {
-      console.error(`Error getting destination by name ${name}`);
-      manageResponseError(response);
+      manageResponseError(`Error getting destination by name ${name}`, response);
       return null;
     }
     const json = await response.json();
