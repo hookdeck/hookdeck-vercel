@@ -1,6 +1,6 @@
 {
   "name": "@hookdeck/vercel",
-  "version": "0.0.7",
+  "version": "0.0.19",
   "description": "",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",

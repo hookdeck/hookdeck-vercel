@@ -19,14 +19,18 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
       const pathname = getPathnameWithFallback(request);
       const cleanPath = pathname.split('&')[0];
 
-      const connections = Object.entries(config.match).map((e) => {
+      const connections: Array<any> = [];
+      for (const e of Object.entries(config.match)) {
         const key = e[0];
         const value = e[1] as any;
-        return Object.assign(value, {
+
+        const conn = Object.assign(value, {
           matcher: key,
-          source_name: value.name || slugify(key),
+          source_name: value.name || (await vercelHash(key)),
         });
-      });
+
+        connections.push(conn);
+      }
 
       const matching = connections.filter(
         (conn_config) => (cleanPath.match(conn_config.matcher) ?? []).length > 0,
@@ -220,13 +224,36 @@ async function forwardToHookdeck(
   return fetch(`${AUTHENTICATED_ENTRY_POINT}${pathname}`, options);
 }
 
-const slugify = (text: string): string =>
-  text
-    .toString()
-    .toLowerCase()
-    .replace(/\//g, '-') // Replace / with -
-    .replace(/\s+/g, '-') // Replace spaces with -
-    .replace(/[^\w\-]+/g, '') // Remove all non-word chars
-    .replace(/\-\-+/g, '-') // Replace multiple - with single -
-    .replace(/^-+/, '') // Trim - from start of text
-    .replace(/-+$/, ''); // Trim - from end of text
+async function vercelHash(key) {
+  // can't use NPM crypto library in Edge Runtime, must
+  // use crypto.subtle
+  const hash = await sha1(key);
+  return `vercel-${hash.slice(0, 9)}`;
+}
+
+async function sha1(str) {
+  // credits to: https://gist.github.com/GaspardP/fffdd54f563f67be8944
+  // Get the string as arraybuffer.
+  const buffer = new TextEncoder().encode(str);
+  const hash = await crypto.subtle.digest('SHA-1', buffer);
+  return hex(hash);
+}
+
+function hex(buffer) {
+  let digest = '';
+  const view = new DataView(buffer);
+  for (let i = 0; i < view.byteLength; i += 4) {
+    // We use getUint32 to reduce the number of iterations (notice the `i += 4`)
+    const value = view.getUint32(i);
+    // toString(16) will transform the integer into the corresponding hex string
+    // but will remove any initial "0"
+    const stringValue = value.toString(16);
+    // One Uint32 element is 4 bytes or 8 hex chars (it would also work with 4
+    // chars for Uint16 and 2 chars for Uint8)
+    const padding = '00000000';
+    const paddedValue = (padding + stringValue).slice(-padding.length);
+    digest += paddedValue;
+  }
+
+  return digest;
+}
