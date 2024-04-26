@@ -2,7 +2,7 @@
 
 The Hookdeck Vercel Middleware adds the ability to authenticate, delay, filter, queue, throttle, and retry asynchronous HTTP requests (e.g., webhooks) made to a Vercel application. The use cases for this include managing webhooks from API providers such as Stripe, Shopify, and Twilio, or when building asynchronous APIs.
 
-![Hookdeck Vercel Middleware](img/vercel-hookdeck-middleware.png)
+![Hookdeck Vercel Middleware](img/hookdeck-vercel-middleware.png)
 
 ## Get Started
 
