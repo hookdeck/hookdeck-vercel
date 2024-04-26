@@ -258,7 +258,7 @@ You can remove the middleware by uninstalling and removing any configuration and
 
 ### Parallel Matching
 
-If you have multiple entries in the config file with the same `matcher`, be aware that the middleware will send the request via `fetch` call once per match and will try to do that in parallel. This heavy use is not a common case, but please check [Edge Middleware Limitations](https://vercel.com/docs/functions/edge-middleware/limitations?ref=github-hookdeck-vercel) if you are in this scenario.
+If you have multiple entries in the config file with the same `match` path, be aware that the middleware will send the request via `fetch` call once per match and will try to do that in parallel. This heavy use is not a common case, but please check [Edge Middleware Limitations](https://vercel.com/docs/functions/edge-middleware/limitations?ref=github-hookdeck-vercel) if you are in this scenario.
 
 ## How the Hookdeck Vercel Middleware Works
 
