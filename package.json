@@ -1,7 +1,7 @@
 {
   "name": "@hookdeck/vercel",
-  "version": "0.1.1-beta.2",
-  "description": "",
+  "version": "0.1.2",
+  "description": "The Hookdeck Vercel Middleware adds the ability to authenticate, delay, filter, queue, throttle, and retry asynchronous HTTP requests (e.g., webhooks) made to a Vercel application. The use cases for this include managing webhooks from API providers such as Stripe, Shopify, and Twilio, or when building asynchronous APIs.",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -11,6 +11,7 @@
   "scripts": {
     "format": "prettier --write '*.{json,js}' 'scripts/**/*.{js,ts}' './**/*.{js,ts}'",
     "lint": "eslint --ext .ts,.tsx -c .eslintrc . && prettier --check '*.{json,js}' 'scripts/**/*.{js,ts}' './**/*.{js,ts}'",
+    "prepack": "npm run build",
     "build": "tsup && cp -r scripts dist",
     "postinstall": "node ./dist/scripts/addPrebuildScript.js --loglevel=verbose",
     "posti": "node ./dist/scripts/addPrebuildScript.js --loglevel=verbose"
