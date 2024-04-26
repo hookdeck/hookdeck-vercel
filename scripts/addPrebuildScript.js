@@ -2,13 +2,25 @@
 
 const fs = require('fs');
 const path = require('path');
-const appRoot = require('app-root-path');
+
+// npm install is run at the root of the project
+// where the module is being installed.
+// See: https://github.com/npm/npm/issues/16990
+const appRoot = process.env.INIT_CWD;
 
 const libraryName = '@hookdeck/vercel';
-const prebuildScript = `node .hookdeck/prebuild.js`;
+const PREBUILD_FILENAME = 'prebuild.js';
+const HOOKDECK_CONFIG_FILENAME = 'hookdeck.config.js';
+const MIDDLEWARE_FILENAME = 'middleware.ts';
+const prebuildScript = `node .hookdeck/${PREBUILD_FILENAME}`;
 const green = 'color:green;';
 
-console.log(`[${libraryName}] Post Install Script Running...`);
+const log = (...args) => {
+  args.unshift(`[${libraryName}]`);
+  console.log.apply(console, args);
+};
+
+log(`Post Install Script Running...`);
 
 const packagePath = path.resolve(`${appRoot}/package.json`);
 if (fs.existsSync(packagePath)) {
@@ -17,45 +29,45 @@ if (fs.existsSync(packagePath)) {
   if (!packageJSON.scripts.prebuild) {
     packageJSON.scripts.prebuild = prebuildScript;
     fs.writeFileSync(packagePath, JSON.stringify(packageJSON, null, 2));
-    console.log(`%c[${libraryName}] Prebuild script added to ${packagePath}`, green);
+    log(`Prebuild script added to ${packagePath}`, green);
   } else {
     if (packageJSON.scripts.prebuild.includes(prebuildScript) === true) {
-      console.log(`%c[${libraryName}] Prebuild script already exists in ${packagePath}`, green);
+      log(`Prebuild script already exists in ${packagePath}`, green);
     } else {
       const addedCommand = `${packageJSON.scripts.prebuild} && ${prebuildScript}`;
       packageJSON.scripts.prebuild = addedCommand;
       fs.writeFileSync(packagePath, JSON.stringify(packageJSON, null, 2));
-      console.log(`%c[${libraryName}] Prebuild script updated in ${packagePath}`, green);
+      log(`Prebuild script updated in ${packagePath}`, green);
     }
   }
   // adds build script if needed
   if (!packageJSON.scripts.build) {
     packageJSON.scripts.build = '';
     fs.writeFileSync(packagePath, JSON.stringify(packageJSON, null, 2));
-    console.log(`%c[${libraryName}] Build script added to ${packagePath}`, green);
+    log(`Build script added to ${packagePath}`, green);
   }
 
-  const sourcePath = path.join(__dirname, 'prebuild.js');
+  const sourcePath = path.join(__dirname, PREBUILD_FILENAME);
   const destDir = `${appRoot}/.hookdeck`;
-  const destinationPath = path.join(`${appRoot}/.hookdeck`, 'prebuild.js');
+  const destinationPath = path.join(`${appRoot}/.hookdeck`, PREBUILD_FILENAME);
   if (!fs.existsSync(destDir)) {
     fs.mkdirSync(destDir, { recursive: true });
   }
   fs.copyFileSync(sourcePath, destinationPath);
-  console.log('prebuild script successfully copied');
+  log('prebuild script successfully copied');
 } else {
-  console.log('Could not find package.json in the current directory.');
+  log('Could not find package.json in the current directory.');
   process.exit(1);
 }
 
-const hookdeckConfigPath = path.resolve(`${appRoot}/hookdeck.config.js`);
+const hookdeckConfigPath = path.resolve(`${appRoot}/${HOOKDECK_CONFIG_FILENAME}`);
 
 if (!fs.existsSync(hookdeckConfigPath)) {
-  const sourcePath = path.join(__dirname, 'hookdeck.config.js');
+  const sourcePath = path.join(__dirname, HOOKDECK_CONFIG_FILENAME);
   fs.copyFileSync(sourcePath, hookdeckConfigPath);
-  console.log('Default hookdeck.config.js added in your project root');
+  log(`Default ${HOOKDECK_CONFIG_FILENAME} added in your project root`);
 } else {
-  console.log('hookdeck.config.js already exists in your project');
+  log(`${HOOKDECK_CONFIG_FILENAME} already exists in your project`);
 }
 
 function existsMiddlewareFileAt(basePath) {
@@ -80,10 +92,20 @@ const existsMiddlewareFile =
 
 if (!existsMiddlewareFile) {
   const target = fs.existsSync(`${appRoot}/src`) ? 'src' : 'root';
-  console.log(
-    `Middleware file is not detected. Adding an empty middleware.ts file at ${target} directory for convenience`,
+  log(
+    `Middleware file is not detected. Adding an empty ${MIDDLEWARE_FILENAME} file at ${target} directory for convenience`,
   );
-  const sourcePath = path.join(`${__dirname}${target === 'src' ? '/src' : ''}`, 'middleware.ts');
-  fs.copyFileSync(sourcePath, path.resolve(`${appRoot}/middleware.ts`));
-  console.log('Middleware file created');
+  const sourcePath = path.join(__dirname, MIDDLEWARE_FILENAME);
+
+  if (target === 'src') {
+    const targetPath = path.join(appRoot, '/src', MIDDLEWARE_FILENAME);
+    const includeFileName = HOOKDECK_CONFIG_FILENAME.replace('.js', '');
+    let middlewareSource = fs.readFileSync(sourcePath, 'utf8');
+    middlewareSource = middlewareSource.replace(`./${includeFileName}`, `../${includeFileName}`);
+    fs.writeFileSync(targetPath, middlewareSource);
+  } else {
+    const targetPath = path.join(appRoot, MIDDLEWARE_FILENAME);
+    fs.copyFileSync(sourcePath, targetPath);
+  }
+  log('Middleware file created');
 }
