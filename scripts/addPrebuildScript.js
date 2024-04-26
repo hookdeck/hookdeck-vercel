@@ -2,7 +2,11 @@
 
 const fs = require('fs');
 const path = require('path');
-const appRoot = require('app-root-path');
+
+// npm install is run at the root of the project
+// where the module is being installed.
+// See: https://github.com/npm/npm/issues/16990
+const appRoot = process.env.INIT_CWD;
 
 const libraryName = '@hookdeck/vercel';
 const prebuildScript = `node .hookdeck/prebuild.js`;
@@ -83,7 +87,8 @@ if (!existsMiddlewareFile) {
   console.log(
     `Middleware file is not detected. Adding an empty middleware.ts file at ${target} directory for convenience`,
   );
-  const sourcePath = path.join(`${__dirname}${target === 'src' ? '/src' : ''}`, 'middleware.ts');
-  fs.copyFileSync(sourcePath, path.resolve(`${appRoot}/middleware.ts`));
+  const sourcePath = path.join(__dirname, 'middleware.ts');
+  const targetPath = path.join(appRoot, `${target === 'src' ? '/src' : ''}`, 'middleware.ts');
+  fs.copyFileSync(sourcePath, targetPath);
   console.log('Middleware file created');
 }
