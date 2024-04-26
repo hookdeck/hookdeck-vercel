@@ -5,29 +5,32 @@ interface DeliveryRate {
   period?: Hookdeck.DestinationRateLimitPeriod;
 }
 
-export interface SourceConfig {
-  matcher: string;
-  api_key?: string;
-  source_name?: string;
-  host?: string;
-  retry?: Omit<Hookdeck.RetryRule, 'type'>;
-  delay?: number;
-  filter?: Omit<Hookdeck.FilterRule, 'type'>;
-  transformation?: Omit<Hookdeck.TransformRule, 'type'>;
-  custom_response?: Hookdeck.SourceCustomResponse;
-  verification?: Hookdeck.SourceVerification;
-  url?: string;
-  delivery_rate?: DeliveryRate;
-  http_method?: Hookdeck.SourceAllowedHttpMethod;
-  auth_method?: Hookdeck.DestinationAuthMethodConfig;
-  path_forwarding_disabled?: boolean;
-  id?: string;
-  source_id?: string;
-  destination_id?: string;
-}
-
 interface HookdeckConfig {
-  [source_name: string]: SourceConfig;
+  vercel_url?: string; // optional
+
+  api_key?: string; // not recommended, use HOOKDECK_API_KEY instead
+  signing_secret?: string; // not recommended, use HOOKDECK_SIGNING_SECRET instead
+
+  match: {
+    [key: string]: {
+      // all attributes are optional
+
+      // source name
+      name?: string;
+
+      // Hookdeck basic functionality
+      retry?: Omit<Hookdeck.RetryRule, 'type'>;
+      delay?: number;
+      filters?: Array<Omit<Hookdeck.FilterRule, 'type'>>;
+      rate?: DeliveryRate;
+
+      // source verification
+      verification?: Hookdeck.SourceVerification;
+
+      // tweak response
+      custom_response?: Hookdeck.SourceCustomResponse;
+    };
+  };
 }
 
 export type { HookdeckConfig };
