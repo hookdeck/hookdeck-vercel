@@ -6,6 +6,7 @@ The Hookdeck Vercel Middleware adds the ability to authenticate, delay, filter, 
 
 Before you begin:
 
+- Have an application with the [Vercel Edge Middleware](https://vercel.com/docs/functions/edge-middleware/quickstart) installed.
 - Create a [Vercel](https://vercel.com?ref=github-hookdeck-vercel) account and a project.
 - [Signup for a Hookdeck account](https://dashboard.hookdeck.com/signup?ref=github-hookdeck-vercel) and create your Hookdeck project.
 - Get the Hookdeck API key from your [project secrets](https://dashboard.hookdeck.com/settings/project/secrets?ref=github-hookdeck-vercel).
@@ -29,7 +30,7 @@ import hookdeckConfig from './hookdeck.config';
 import { NextResponse } from 'next/server';
 
 export const config = {
-  // ... existing or additional your middleware config
+  matcher: '/api/webhooks',
 };
 
 function middleware(request: Request) {
