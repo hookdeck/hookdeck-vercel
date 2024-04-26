@@ -79,17 +79,6 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
         return middlewareResponse;
       }
 
-      const contains_proccesed_header =
-        Object.keys(request.headers ?? {})
-          .map((e) => e.toLowerCase())
-          .filter((e) => e === HOOKDECK_PROCESSED_HEADER).length > 0;
-
-      if (contains_proccesed_header) {
-        // TODO: This makes the request to go through middleware twice, affecting Vercel costs!
-        console.log('Request already processed by Hookdeck. Redirecting to middleware');
-        return f.apply(this, args);
-      }
-
       // Forward to Hookdeck
 
       if (matching.length === 1) {
