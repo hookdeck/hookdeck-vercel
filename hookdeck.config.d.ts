@@ -1,11 +1,11 @@
 import { Hookdeck } from '@hookdeck/sdk';
 
-interface DeliveryRate {
+export interface DeliveryRate {
   limit?: number;
   period?: Hookdeck.DestinationRateLimitPeriod;
 }
 
-interface HookdeckConfig {
+export interface HookdeckConfig {
   vercel_url?: string; // optional
 
   api_key?: string; // not recommended, use HOOKDECK_API_KEY instead

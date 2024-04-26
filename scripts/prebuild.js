@@ -47,7 +47,6 @@ async function checkPrebuild() {
 
     console.log('hookdeck.config.js is valid');
 
-    // const env_configs = [];
     const created_connections_pseudo_keys = {};
     for (const conn_config of connections) {
       const has_connection_id = !!conn_config.id;
@@ -239,8 +238,7 @@ async function autoCreateConnection(api_key, config) {
       body: JSON.stringify(data),
     });
     if (response.status !== 200) {
-      manageResponseError(response, JSON.stringify(data));
-      return null;
+      manageResponseError('Error getting connections', response, JSON.stringify(data));
     }
     const json = await response.json();
     console.log('Connection created', json);
@@ -255,14 +253,14 @@ function manageError(error) {
   process.exit(1);
 }
 
-function manageResponseError(response, body) {
+function manageResponseError(msg, response, body) {
   switch (response.status) {
     case 401:
-      console.error('Invalid or expired hookdeck api_key', response.status, response.statusText);
+      console.error(`${msg}: Invalid or expired api_key`, response.status, response.statusText);
       break;
 
     default:
-      console.error('Error', response.status, response.statusText, body);
+      console.error(msg, response.status, response.statusText, body);
       break;
   }
   process.exit(1);
@@ -372,9 +370,7 @@ async function updateConnection(api_key, id, config) {
       body: JSON.stringify(data),
     });
     if (response.status !== 200) {
-      console.error('Error while updating connection with ID', id);
-      manageResponseError(response, JSON.stringify(data));
-      return null;
+      manageResponseError(`Error updating connection with ID ${id}`, JSON.stringify(data));
     }
     const json = await response.json();
     console.log('Connection updated', json);
@@ -433,7 +429,11 @@ async function updateSource(api_key, id, config) {
     body: JSON.stringify(data),
   });
   if (response.status !== 200) {
-    throw new Error(`Error while updating source with ID ${id}`);
+    manageResponseError(
+      `Error while updating source with ID ${id}`,
+      response,
+      JSON.stringify(data),
+    );
   }
   const json = await response.json();
   console.log('Source updated', json);
@@ -467,7 +467,11 @@ async function updateDestination(api_key, id, config) {
     body: JSON.stringify(data),
   });
   if (response.status !== 200) {
-    throw new Error(`Error while updating destination with ID ${id}`);
+    manageResponseError(
+      `Error while updating destination with ID ${id}`,
+      response,
+      JSON.stringify(data),
+    );
   }
   const json = await response.json();
   console.log('Destination updated', json);
@@ -498,8 +502,10 @@ async function getConnectionWithSourceAndDestination(api_key, source, destinatio
       credentials: 'include',
     });
     if (response.status !== 200) {
-      manageResponseError(response);
-      return null;
+      manageResponseError(
+        `Error getting connection for source ${source.id} and destination ${destination.id}`,
+        response,
+      );
     }
     const json = await response.json();
     if (json.models.length === 0) {
@@ -529,8 +535,7 @@ async function getSourceByName(api_key, source_name) {
       credentials: 'include',
     });
     if (response.status !== 200) {
-      manageResponseError(response);
-      return null;
+      manageResponseError(`Error getting source '${source_name}'`, response);
     }
     const json = await response.json();
     if (json.models.length === 0) {
@@ -556,9 +561,7 @@ async function getDestinationByName(api_key, name) {
       credentials: 'include',
     });
     if (response.status !== 200) {
-      console.error(`Error getting destination by name ${name}`);
-      manageResponseError(response);
-      return null;
+      manageResponseError(`Error getting destination by name ${name}`, response);
     }
     const json = await response.json();
     if (json.models.length === 0) {
