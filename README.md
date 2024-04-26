@@ -80,10 +80,13 @@ curl --location 'http://your.vercel.app/api/webhooks' \
 }'
 ```
 
-TODOs:
+Check the Vercel logs to check the middleware is processing the events:
 
-1. Check Vercel logs
-2. Check Hookdeck dashboard for connection creation, request logs, event logs
+![Vercel Logs](img/vercel-logs.png)
+
+Check the Hookdeck logs to check the request are handled and the events are being processed and delivered:
+
+![Hookdeck events](img/hookdeck-events.png)
 
 ## Configuration
 
@@ -268,6 +271,24 @@ This Hookdeck Vercel Middleware package is used in two stages:
 During deployment, a `prebuild`` hook checks a configuration file and dynamically creates and configures a [connection](https://hookdeck.com/docs/connections?ref=github-hookdeck-vercel) in Hookdeck:
 
 ![Build time](img/build_time.jpg)
+
+For example, the following `hookdeck.config.js`:
+
+```typescript
+/** @type {import("@hookdeck/vercel").HookdeckConfig} */
+const hookdeckConfig = {
+  vercel_url: 'https://hookdeck-vercel-example.vercel.app/',
+  match: {
+    '/api/webhooks': {},
+  },
+};
+
+module.exports = hookdeckConfig;
+```
+
+Results in something like the following connection being created in Hookdeck:
+
+![Hookdeck Connection](img/hookdeck-connection.png)
 
 ### Runtime
 
