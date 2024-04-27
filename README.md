@@ -12,8 +12,8 @@ Before you begin:
 - Create a [Vercel](https://vercel.com?ref=github-hookdeck-vercel) account and a project.
 - [Signup for a Hookdeck account](https://dashboard.hookdeck.com/signup?ref=github-hookdeck-vercel) and create your Hookdeck project.
 - Get the Hookdeck API key and Signing Secret from your [project secrets](https://dashboard.hookdeck.com/settings/project/secrets?ref=github-hookdeck-vercel).
-- Add `HOOKDECK_API_KEY` and `HOOKDECK_SIGNING_SECRET` as [environmenet variable](https://vercel.com/docs/projects/environment-variables?ref=github-hookdeck-vercel)
-  for your Vercel project.
+- Add `HOOKDECK_API_KEY` and `HOOKDECK_SIGNING_SECRET` as [environment variables](https://vercel.com/docs/projects/environment-variables?ref=github-hookdeck-vercel)
+  in your Vercel project.
 
 Install the Hookdeck Vercel package:
 
