@@ -134,8 +134,10 @@ function isString(str) {
 }
 
 function getDestinationUrl(config) {
-  const dest_url = config.url || config.host || `https://${process.env.VERCEL_BRANCH_URL}`;
-  return dest_url.endsWith('/') ? dest_url.substring(0, dest_url.length - 1) : dest_url;
+  let dest_url = config.url || config.host || `https://${process.env.VERCEL_BRANCH_URL}`;
+  dest_url = dest_url.endsWith('/') ? dest_url.slice(0, -1) : dest_url;
+  dest_url = dest_url.startsWith('http') ? dest_url : `https://${dest_url}`;
+  return dest_url;
 }
 
 function getConnectionRules(config) {
