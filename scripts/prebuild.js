@@ -2,8 +2,17 @@ const appRoot = require('app-root-path');
 const fs = require('fs');
 const path = require('path');
 const process = require('process');
-const hookdeckConfig = require('../hookdeck.config');
 const crypto = require('crypto');
+
+const modulePath = path.join(process.cwd(), 'hookdeck.config');
+let hookdeckConfig;
+try {
+  hookdeckConfig = require(modulePath);
+  console.log(`Module ${modulePath} successfully loaded`, hookdeckConfig);
+} catch (error) {
+  console.error(`Error loading module ${modulePath}`, error);
+  exit(1);
+}
 
 const LIBRARY_NAME = '@hookdeck/vercel';
 const WRAPPER_NAME = 'withHookdeck';
