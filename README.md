@@ -8,11 +8,10 @@ The Hookdeck Vercel Middleware adds the ability to authenticate, delay, filter, 
 
 Before you begin:
 
-- Ensure you have an application with the [Vercel Edge Middleware](https://vercel.com/docs/functions/edge-middleware/quickstart) installed.
 - Create a [Vercel](https://vercel.com?ref=github-hookdeck-vercel) account and a project.
 - [Signup for a Hookdeck account](https://dashboard.hookdeck.com/signup?ref=github-hookdeck-vercel) and create your Hookdeck project.
 - Get the Hookdeck API key and Signing Secret from your [project secrets](https://dashboard.hookdeck.com/settings/project/secrets?ref=github-hookdeck-vercel).
-- Add `HOOKDECK_API_KEY` and `HOOKDECK_SIGNING_SECRET` as [environmenet variable](https://vercel.com/docs/projects/environment-variables?ref=github-hookdeck-vercel)
+- Add `HOOKDECK_API_KEY` and `HOOKDECK_SIGNING_SECRET` (optional but recommended) as [environment variables](https://vercel.com/docs/projects/environment-variables?ref=github-hookdeck-vercel)
   for your Vercel project.
 
 Install the Hookdeck Vercel package:
@@ -26,15 +25,31 @@ npm i @hookdeck/vercel
 Ensure the `match` in `hookdeck.config.js` matches the route you want the middleware to intercept:
 
 ```js
+const { RetryStrategy, DestinationRateLimitPeriod } = require('@hookdeck/sdk/api');
+
 /** @type {import("@hookdeck/vercel").HookdeckConfig} */
 const hookdeckConfig = {
   match: {
-    '/api/webhooks': {},
+    '/api/webhooks': {
+      retry: {
+        strategy: RetryStrategy.Linear,
+        count: 5,
+        interval: 1 * 60 * 1000, // in milliseconds
+      },
+      rate: {
+        limit: 10,
+        period: DestinationRateLimitPeriod.Second,
+      },
+    },
   },
 };
 
 module.exports = hookdeckConfig;
 ```
+
+This example configures a retry strategy with a linear back-off and a delivery rate limit of 10 requests per second.
+
+> ℹ️ The Hookdeck Vercel Middleware uses `VERCEL_BRANCH_URL` by default. If you are not deploying your application via source control, set `hookdeckConfig.vercel_url` to a different URL such as `process.env.VERCEL_URL`.
 
 Update `middleware.ts` (or `middleware.js`) to add the Hookdeck Vercel Middleware and ensure `config.matcher` has the same value as you have in `hookdeck.config.js` (e.g., `/api/webhooks`):
 
@@ -70,7 +85,7 @@ export async function POST() {
 
 Deploy the application to Vercel.
 
-Once the deployment has succeeded, request your middleware endpoint:
+Once the deployment has succeeded, make a request to your middleware endpoint:
 
 ```bash
 curl --location 'http://your.vercel.app/api/webhooks' \
@@ -80,11 +95,11 @@ curl --location 'http://your.vercel.app/api/webhooks' \
 }'
 ```
 
-Check the Vercel logs to check the middleware is processing the events:
+Check the Vercel logs to see that the middleware is processing the events:
 
 ![Vercel Logs](img/vercel-logs.png)
 
-Check the Hookdeck logs to check the request are handled and the events are being processed and delivered:
+Check the Hookdeck logs to see that the requests are being handled and the events are being processed and delivered:
 
 ![Hookdeck events](img/hookdeck-events.png)
 
@@ -95,7 +110,7 @@ Check the Hookdeck logs to check the request are handled and the events are bein
 Environment variables used by the middleware. Get the values from the [Hookdeck project secrets](https://dashboard.hookdeck.com/settings/project/secrets?ref=github-hookdeck-vercel).
 
 - `HOOKDECK_API_KEY`: The Hookdeck project API Key used to manage the [connections](https://hookdeck.com/docs/connections?ref=github-hookdeck-vercel) within your project.
-- `HOOKDECK_SIGNING_SECRET`: Used to check the signature of the inbound HTTP request when it is received from Hookdeck. See [webhook signature verification](https://hookdeck.com/docs/authentication#hookdeck-webhook-signature-verification?ref=github-hookdeck-vercel). Get the value from the [Hookdeck project secrets](https://dashboard.hookdeck.com/settings/project/secrets?ref=github-hookdeck-vercel).
+- `HOOKDECK_SIGNING_SECRET`: Optional but recommended. Used to check the signature of the inbound HTTP request when received from Hookdeck. See [webhook signature verification](https://hookdeck.com/docs/authentication#hookdeck-webhook-signature-verification?ref=github-hookdeck-vercel). Get the value from the [Hookdeck project secrets](https://dashboard.hookdeck.com/settings/project/secrets?ref=github-hookdeck-vercel).
 
 You can also set these values programmatically within `hookdeck.config.js`.
 
@@ -145,15 +160,15 @@ module.exports = hookdeckConfig;
 Full configuration options:
 
 - `api_key`: The Hookdeck project API Key used to manage the [connections](https://hookdeck.com/docs/connections?ref=github-hookdeck-vercel) within your project. This config value will override the `HOOKDECK_API_KEY` environment variable. Get the value from the [Hookdeck project secrets](https://dashboard.hookdeck.com/settings/project/secrets?ref=github-hookdeck-vercel).
-- `signing_secret`: Used to check the signature of the inbound HTTP request when it is recieved from Hookdeck. This config value will override the `HOOKDECK_SIGNING_SECRET` environment variable. See [webhook signature verification](https://hookdeck.com/docs/authentication#hookdeck-webhook-signature-verification?ref=github-hookdeck-vercel). Get the value from the [Hookdeck project secrets](https://dashboard.hookdeck.com/settings/project/secrets?ref=github-hookdeck-vercel).
-- `vercel_url`: The Vercel's url that can receive the requests. If not specified, the host stored in env var `VERCEL_BRANCH_URL` will be used.
+- `signing_secret`: Used to check the signature of the inbound HTTP request when it is received from Hookdeck. This config value will override the `HOOKDECK_SIGNING_SECRET` environment variable. See [webhook signature verification](https://hookdeck.com/docs/authentication#hookdeck-webhook-signature-verification?ref=github-hookdeck-vercel). Get the value from the [Hookdeck project secrets](https://dashboard.hookdeck.com/settings/project/secrets?ref=github-hookdeck-vercel).
+- `vercel_url`: The Vercel URL that receives the requests. If not specified, the host stored in env var `VERCEL_BRANCH_URL` will be used.
 - `match`: a key-value map of paths for routes and the configuration for each of those routes.
-  - `[path]` - the matching string or regex that will be compared or tested against the pathname of the url that triggered the middleware. If there is more than one match, then the request is sent to every matching configuration.
-    - `retry`: use the values specified in the [Retry documentation](https://hookdeck.com/docs/api#retry?ref=github-hookdeck-vercel) to configura Hookdeck's retry strategy.
-    - `delay`: the number of milliseconds to hold the event when it arrives to Hookdeck.
+  - `[path]` - the matching string or regex that will be compared or tested against the pathname of the URL that triggered the middleware. If there is more than one match, then the request is sent to every matching configuration.
+    - `retry`: use the values specified in the [Retry documentation](https://hookdeck.com/docs/api#retry?ref=github-hookdeck-vercel) to configure Hookdeck's retry strategy.
+    - `delay`: the number of milliseconds to hold the event when it arrives at Hookdeck.
     - `filters`: specify different filters to exclude some events from forwarding. Use the syntax specified in the [Filter documentation](https://hookdeck.com/docs/api#filter?ref=github-hookdeck-vercel).
     - `rate`: set the delivery rate to be used for the outcoming traffic. Check the syntax in the `rate_limit_period` key in the [Destination documentation](https://hookdeck.com/docs/api#destination-object?ref=github-hookdeck-vercel).
-    - `verification`: inbound (source) verification mechanism to use. Check all possible values and syntax in the [Source documentation](https://hookdeck.com/docs/api#source-object?ref=github-hookdeck-vercel).
+    - `verification`: the inbound (source) verification mechanism to use. Check all possible values and syntax in the [Source documentation](https://hookdeck.com/docs/api#source-object?ref=github-hookdeck-vercel).
     - `custom_response`: the custom response to send back the webhook origin. Check the syntax in the [Source documentation](https://hookdeck.com/docs/api#source-object?ref=github-hookdeck-vercel).
 
 Here's an example with all the configuration options:
@@ -241,7 +256,7 @@ module.exports = hookdeckConfig;
 
 ### Removing the Middleware and Going Directly to Hookdeck
 
-The Hookdeck Vercel middleware adds an additional hop to every process request, so if milliseconds are a factor in processing requests, you may want to use Hookdeck directly and not use the middleware.
+The Hookdeck Vercel middleware adds a hop to every process request, so if milliseconds are a factor in processing requests, you may want to use Hookdeck directly and not use the middleware.
 
 With the Hookdeck Vercel Middleware:
 
@@ -254,7 +269,7 @@ Without the Hookdeck Vercel Middleware:
 1. Request to Hookdeck Source URL
 2. Request to Vercel URL
 
-You can remove the middleware by uninstalling and removing any configuration and directly using the [Hookdeck Source](https://hookdeck.com/docs/sources?ref=github-hookdeck-vercel) URL where you previously used the Vercel URL, for example, as your Stripe or Shopify webhook URL.
+You can remove the middleware by uninstalling the package and removing any configuration and directly using the [Hookdeck Source](https://hookdeck.com/docs/sources?ref=github-hookdeck-vercel) URL where you previously used the Vercel URL, for example, as your Stripe or Shopify webhook URL.
 
 ### Parallel Matching
 
@@ -262,7 +277,7 @@ If you have multiple entries in the config file with the same `match` path, be a
 
 ## How the Hookdeck Vercel Middleware Works
 
-The `@hookdeck/vercel` package is supported in the [Vercel's Edge Middleware](https://vercel.com/docs/functions/edge-middleware?ref=github-hookdeck-vercel) and executes before a request is processed on your site. This way, the request can be forwarded to Hookdeck and then received again by your specified endpoint, but with all the extra features you may need from Hookdeck, such as queuing, filters, and retry strategies.
+The `@hookdeck/vercel` package is supported in the [Vercel Edge Middleware](https://vercel.com/docs/functions/edge-middleware?ref=github-hookdeck-vercel) and executes before a request is processed on your site. This way, the request can be forwarded to Hookdeck and then received again by your specified endpoint, but with all the extra features you may need from Hookdeck, such as queuing, filters, and retry strategies.
 
 This Hookdeck Vercel Middleware package is used in two stages:
 
