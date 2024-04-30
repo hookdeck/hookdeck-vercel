@@ -357,8 +357,8 @@ function validateConfig(config) {
     );
   }
 
-  if (!config.vercel_url && !process.env.VERCEL_BRANCH_URL) {
-    console.info(
+  if ( (config.vercel_url || '').trim() === '' && (process.env.VERCEL_BRANCH_URL || '').trim() === '') {
+    console.error(
       'Vercel url not present in config file nor in `process.env.VERCEL_BRANCH_URL`. ' +
         `Please follow the steps in ${TUTORIAL_URL}.`,
     );
