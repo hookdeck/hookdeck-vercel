@@ -9,7 +9,7 @@ const modulePath = path.join(process.cwd(), 'hookdeck.config');
 let hookdeckConfig;
 try {
   hookdeckConfig = require(modulePath);
-  console.log(`Module ${modulePath} successfully loaded`, hookdeckConfig);
+  console.log(`Module ${modulePath} successfully loaded`, JSON.stringify(hookdeckConfig));
 } catch (error) {
   console.error(`Error loading module ${modulePath}`, error);
   process.exit(1);
