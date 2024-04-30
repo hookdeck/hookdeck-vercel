@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 const appRoot = require('app-root-path');
 const fs = require('fs');
 const path = require('path');
@@ -20,6 +21,18 @@ const TUTORIAL_URL = 'https://hookdeck.com/docs';
 
 const HookdeckEnvironment = require('@hookdeck/sdk').HookdeckEnvironment;
 const API_ENDPOINT = HookdeckEnvironment.Default;
+
+const args = process.argv.slice(2);
+
+switch (args[0]) {
+    case 'deploy':
+        if (!checkPrebuild()) {
+          exit(1);
+        }
+        break;
+    default:
+        console.log(`invalid command ${args[0]}`);
+}
 
 async function checkPrebuild() {
   try {
@@ -112,10 +125,6 @@ async function checkPrebuild() {
     console.error('Error:', error);
     return false;
   }
-}
-
-if (!checkPrebuild()) {
-  exit(1);
 }
 
 function generateId(prefix = '') {

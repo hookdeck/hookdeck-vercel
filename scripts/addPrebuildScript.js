@@ -9,10 +9,9 @@ const path = require('path');
 const appRoot = process.env.INIT_CWD;
 
 const libraryName = '@hookdeck/vercel';
-const PREBUILD_FILENAME = 'prebuild.js';
 const HOOKDECK_CONFIG_FILENAME = 'hookdeck.config.js';
 const MIDDLEWARE_FILENAME = 'middleware.ts';
-const prebuildScript = `node ./node_modules/${libraryName}/dist/scripts/${PREBUILD_FILENAME}`;
+const prebuildScript = "hookdeck-vercel deploy";
 const green = 'color:green;';
 
 const log = (...args) => {
