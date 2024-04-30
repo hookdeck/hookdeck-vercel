@@ -331,6 +331,7 @@ function validateMiddleware() {
   } else {
     console.log(`Usage of ${LIBRARY_NAME} detected`);
   }
+  return true;
 }
 
 function validateConfig(config) {
