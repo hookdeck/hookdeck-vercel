@@ -51,7 +51,7 @@ async function checkPrebuild() {
       const value = e[1];
 
       let env_url = process.env.VERCEL_BRANCH_URL;
-      if (env_url && !env_url.startsWith('http')) {
+      if (env_url && !env_url.startsWith('http://') && !env_url.startsWith('https://')) {
         env_url = `https://${env_url}`;
       }
 
