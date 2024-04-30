@@ -12,7 +12,7 @@ try {
   console.log(`Module ${modulePath} successfully loaded`, hookdeckConfig);
 } catch (error) {
   console.error(`Error loading module ${modulePath}`, error);
-  exit(1);
+  process.exit(1);
 }
 
 const LIBRARY_NAME = '@hookdeck/vercel';
@@ -27,7 +27,7 @@ const args = process.argv.slice(2);
 switch (args[0]) {
     case 'deploy':
         if (!checkPrebuild()) {
-          exit(1);
+          process.exit(1);
         }
         break;
     default:
@@ -36,7 +36,9 @@ switch (args[0]) {
 
 async function checkPrebuild() {
   try {
-    validateMiddleware();
+    if (!validateMiddleware()) {
+      return false;
+    }
     if (!validateConfig(hookdeckConfig)) {
       return false;
     }
@@ -313,7 +315,6 @@ function validateMiddleware() {
     console.warn(
       `Middleware file not found. Consider removing ${LIBRARY_NAME} from your dev dependencies if you are not using it.`,
     );
-    return;
   }
 
   // 2) Check if library is used in middleware.
