@@ -50,20 +50,15 @@ async function checkPrebuild() {
       const key = e[0];
       const value = e[1];
 
-      let env_url = process.env.VERCEL_BRANCH_URL;
-      if (env_url && !env_url.startsWith('http://') && !env_url.startsWith('https://')) {
-        env_url = `https://${env_url}`;
-      }
-
-      let conf_url = vercel_url;
-      if (conf_url && !conf_url.startsWith('http://') && !conf_url.startsWith('https://')) {
-        conf_url = `https://${conf_url}`;
+      let url = vercel_url || process.env.VERCEL_BRANCH_URL;
+      if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
+        url = `https://${url}`;
       }
 
       const conn = Object.assign(value, {
         api_key: api_key || process.env.HOOKDECK_API_KEY,
         signing_secret: signing_secret || process.env.HOOKDECK_SIGNING_SECRET,
-        host: conf_url || env_url,
+        host: url,
         matcher: key,
         source_name: value.name || (await vercelHash(key)),
         destination_name: slugify(key),
