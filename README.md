@@ -2,7 +2,7 @@
 
 The Hookdeck Vercel Middleware adds the ability to authenticate, delay, filter, queue, throttle, and retry asynchronous HTTP requests (e.g., webhooks) made to a Vercel application. The use cases for this include managing webhooks from API providers such as Stripe, Shopify, and Twilio, or when building asynchronous APIs.
 
-![Hookdeck Vercel Middleware](https://github.com/hookdeck/hookdeck-vercel/raw/main/img/hookdeck-vercel-middleware.png)
+![Hookdeck Vercel Middleware](img/hookdeck-vercel-middleware.png)
 
 ## Get Started
 
@@ -20,9 +20,9 @@ Install the Hookdeck Vercel package:
 npm i @hookdeck/vercel
 ```
 
-> Once installed, package a `hookdeck.config.js` file and a `.hookdeck` directory are created at the root of your project. Also, the command `node .hookdeck/prebuild.js` is appended to the `prebuild` script of your `package.json`.
+> Once installed, package a `hookdeck.config.js` file is created at the root of your project. Also, the command `hookdeck-vercel deploy` is appended to the `prebuild` script of your `package.json`.
 
-Ensure the `match` in `hookdeck.config.js` matches the route you want the middleware to intercept:
+Ensure the `match` key in `hookdeck.config.js` matches the route you want the middleware to intercept:
 
 ```js
 const { RetryStrategy, DestinationRateLimitPeriod } = require('@hookdeck/sdk/api');
@@ -51,7 +51,7 @@ This example configures a retry strategy with a linear back-off and a delivery r
 
 > ℹ️ The Hookdeck Vercel Middleware uses `VERCEL_BRANCH_URL` by default. If you are not deploying your application via source control, set `hookdeckConfig.vercel_url` to a different URL such as `process.env.VERCEL_URL`.
 
-Update `middleware.ts` (or `middleware.js`) to add the Hookdeck Vercel Middleware and ensure `config.matcher` has the same value as you have in `hookdeck.config.js` (e.g., `/api/webhooks`):
+Update `middleware.ts` (or `middleware.js`) to add the Hookdeck Vercel Middleware and ensure `config.matcher` has the same (or broader) value as you have in `hookdeck.config.js` (e.g., `/api/webhooks`):
 
 ```typescript
 import { withHookdeck } from '@hookdeck/vercel';
@@ -161,7 +161,7 @@ Full configuration options:
 
 - `api_key`: The Hookdeck project API Key used to manage the [connections](https://hookdeck.com/docs/connections?ref=github-hookdeck-vercel) within your project. This config value will override the `HOOKDECK_API_KEY` environment variable. Get the value from the [Hookdeck project secrets](https://dashboard.hookdeck.com/settings/project/secrets?ref=github-hookdeck-vercel).
 - `signing_secret`: Used to check the signature of the inbound HTTP request when it is received from Hookdeck. This config value will override the `HOOKDECK_SIGNING_SECRET` environment variable. See [webhook signature verification](https://hookdeck.com/docs/authentication#hookdeck-webhook-signature-verification?ref=github-hookdeck-vercel). Get the value from the [Hookdeck project secrets](https://dashboard.hookdeck.com/settings/project/secrets?ref=github-hookdeck-vercel).
-- `vercel_url`: The Vercel URL that receives the requests. If not specified, the host stored in env var `VERCEL_BRANCH_URL` will be used.
+- `vercel_url`: The Vercel URL that receives the requests. If not specified, the url stored in env var `VERCEL_BRANCH_URL` will be used.
 - `match`: a key-value map of paths for routes and the configuration for each of those routes.
   - `[path]` - the matching string or regex that will be compared or tested against the pathname of the URL that triggered the middleware. If there is more than one match, then the request is sent to every matching configuration.
     - `retry`: use the values specified in the [Retry documentation](https://hookdeck.com/docs/api#retry?ref=github-hookdeck-vercel) to configure Hookdeck's retry strategy.
@@ -261,8 +261,8 @@ The Hookdeck Vercel middleware adds a hop to every process request, so if millis
 With the Hookdeck Vercel Middleware:
 
 1. Request to Vercel URL
-2. Redirect request to Hookdeck
-3. Request to Vercel URL (which the middleware passes through)
+2. Forward request to Hookdeck
+3. Request back to Vercel URL (which the middleware passes through)
 
 Without the Hookdeck Vercel Middleware:
 
