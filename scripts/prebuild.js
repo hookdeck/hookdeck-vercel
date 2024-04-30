@@ -17,7 +17,7 @@ try {
 
 const LIBRARY_NAME = '@hookdeck/vercel';
 const WRAPPER_NAME = 'withHookdeck';
-const TUTORIAL_URL = 'https://hookdeck.com/docs';
+const TUTORIAL_URL = 'https://github.com/hookdeck/hookdeck-vercel/blob/main/README.md';
 
 const HookdeckEnvironment = require('@hookdeck/sdk').HookdeckEnvironment;
 const API_ENDPOINT = HookdeckEnvironment.Default;
