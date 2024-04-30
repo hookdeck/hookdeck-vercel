@@ -10,11 +10,6 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
   return async function (...args) {
     const request = args[0];
 
-    if (!config) {
-      console.error('[Hookdeck] Error getting hookdeck.config.js. Using standard middleware...');
-      return Promise.resolve(f.apply(this, args));
-    }
-
     try {
       const pathname = getPathnameWithFallback(request);
       const cleanPath = pathname.split('&')[0];
@@ -46,6 +41,13 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
         console.warn(
           "[Hookdeck] Hookdeck API key doesn't found. You must set it as a env variable named HOOKDECK_API_KEY or include it in your hookdeck.config.js file.",
         );
+        return Promise.resolve(f.apply(this, args));
+      }
+
+      // Check if vercel or next env is develoment
+      const is_development = process && (process.env.VERCEL_ENV === 'development' || process.env.NODE_ENV === 'development');
+      if (is_development) {
+        console.warn('[Hookdeck] Detected local development enviroment. Cannot forward to Hookdeck. Bypassing to middleware...');
         return Promise.resolve(f.apply(this, args));
       }
 
