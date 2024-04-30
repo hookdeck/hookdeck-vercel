@@ -20,7 +20,7 @@ const hookdeckConfig = {
       // filters: [
       //   {
       //     headers: {
-      //       'x-my-header': 'my-value',
+      //       'Contenty-Type': 'application/json',
       //     },
       //     body: {},
       //     query: {},
