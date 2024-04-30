@@ -11,7 +11,7 @@ const appRoot = process.env.INIT_CWD;
 const libraryName = '@hookdeck/vercel';
 const HOOKDECK_CONFIG_FILENAME = 'hookdeck.config.js';
 const MIDDLEWARE_FILENAME = 'middleware.ts';
-const prebuildScript = "hookdeck-vercel deploy";
+const prebuildScript = 'hookdeck-vercel deploy';
 const green = 'color:green;';
 
 const log = (...args) => {

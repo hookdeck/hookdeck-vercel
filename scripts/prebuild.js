@@ -25,13 +25,13 @@ const API_ENDPOINT = HookdeckEnvironment.Default;
 const args = process.argv.slice(2);
 
 switch (args[0]) {
-    case 'deploy':
-        if (!checkPrebuild()) {
-          process.exit(1);
-        }
-        break;
-    default:
-        console.log(`invalid command ${args[0]}`);
+  case 'deploy':
+    if (!checkPrebuild()) {
+      process.exit(1);
+    }
+    break;
+  default:
+    console.log(`invalid command ${args[0]}`);
 }
 
 async function checkPrebuild() {
@@ -360,12 +360,15 @@ function validateConfig(config) {
     );
   }
 
-  if ( (config.vercel_url || '').trim() === '' && (process.env.VERCEL_BRANCH_URL || '').trim() === '') {
+  if (
+    (config.vercel_url || '').trim() === '' &&
+    (process.env.VERCEL_BRANCH_URL || '').trim() === ''
+  ) {
     console.error(
       '`VERCEL_BRANCH_URL` env var and `vercel_url` config key are empty. ' +
-      'It seems that this project is not connected to a Git repository. ' +
-      'In such case, can must define the env var `VERCEL_BRANCH_URL` or `vercel_url` key in `hookdeck.config` file pointing to your Vercel\'s public url.' + 
-      'Check this documentation for more information about Vercel url: https://vercel.com/docs/deployments/generated-urls'
+        'It seems that this project is not connected to a Git repository. ' +
+        "In such case, can must define the env var `VERCEL_BRANCH_URL` or `vercel_url` key in `hookdeck.config` file pointing to your Vercel's public url." +
+        'Check this documentation for more information about Vercel url: https://vercel.com/docs/deployments/generated-urls',
     );
     return false;
   }

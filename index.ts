@@ -45,9 +45,13 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
       }
 
       // Check if vercel or next env is develoment
-      const is_development = process && (process.env.VERCEL_ENV === 'development' || process.env.NODE_ENV === 'development');
+      const is_development =
+        process &&
+        (process.env.VERCEL_ENV === 'development' || process.env.NODE_ENV === 'development');
       if (is_development) {
-        console.warn('[Hookdeck] Local development environment detected. Hookdeck middleware is disabled locally. Bypassing the middleware...');
+        console.warn(
+          '[Hookdeck] Local development environment detected. Hookdeck middleware is disabled locally. Bypassing the middleware...',
+        );
         return Promise.resolve(f.apply(this, args));
       }
 
