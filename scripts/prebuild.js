@@ -56,7 +56,7 @@ async function checkPrebuild() {
       }
 
       let conf_url = vercel_url;
-      if (conf_url && !conf_url.startsWith('http')) {
+      if (conf_url && !conf_url.startsWith('http://') && !conf_url.startsWith('https://')) {
         conf_url = `https://${conf_url}`;
       }
 
