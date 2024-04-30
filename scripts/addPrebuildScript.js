@@ -9,10 +9,9 @@ const path = require('path');
 const appRoot = process.env.INIT_CWD;
 
 const libraryName = '@hookdeck/vercel';
-const PREBUILD_FILENAME = 'prebuild.js';
 const HOOKDECK_CONFIG_FILENAME = 'hookdeck.config.js';
 const MIDDLEWARE_FILENAME = 'middleware.ts';
-const prebuildScript = `node .hookdeck/${PREBUILD_FILENAME}`;
+const prebuildScript = "hookdeck-vercel deploy";
 const green = 'color:green;';
 
 const log = (...args) => {
@@ -46,15 +45,6 @@ if (fs.existsSync(packagePath)) {
     fs.writeFileSync(packagePath, JSON.stringify(packageJSON, null, 2));
     log(`Build script added to ${packagePath}`, green);
   }
-
-  const sourcePath = path.join(__dirname, PREBUILD_FILENAME);
-  const destDir = `${appRoot}/.hookdeck`;
-  const destinationPath = path.join(`${appRoot}/.hookdeck`, PREBUILD_FILENAME);
-  if (!fs.existsSync(destDir)) {
-    fs.mkdirSync(destDir, { recursive: true });
-  }
-  fs.copyFileSync(sourcePath, destinationPath);
-  log('prebuild script successfully copied');
 } else {
   log('Could not find package.json in the current directory.');
   process.exit(1);

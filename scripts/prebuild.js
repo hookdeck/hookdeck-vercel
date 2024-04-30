@@ -1,9 +1,19 @@
+#!/usr/bin/env node
 const appRoot = require('app-root-path');
 const fs = require('fs');
 const path = require('path');
 const process = require('process');
-const hookdeckConfig = require('../hookdeck.config');
 const crypto = require('crypto');
+
+const modulePath = path.join(process.cwd(), 'hookdeck.config');
+let hookdeckConfig;
+try {
+  hookdeckConfig = require(modulePath);
+  console.log(`Module ${modulePath} successfully loaded`, hookdeckConfig);
+} catch (error) {
+  console.error(`Error loading module ${modulePath}`, error);
+  process.exit(1);
+}
 
 const LIBRARY_NAME = '@hookdeck/vercel';
 const WRAPPER_NAME = 'withHookdeck';
@@ -12,9 +22,23 @@ const TUTORIAL_URL = 'https://hookdeck.com/docs';
 const HookdeckEnvironment = require('@hookdeck/sdk').HookdeckEnvironment;
 const API_ENDPOINT = HookdeckEnvironment.Default;
 
+const args = process.argv.slice(2);
+
+switch (args[0]) {
+    case 'deploy':
+        if (!checkPrebuild()) {
+          process.exit(1);
+        }
+        break;
+    default:
+        console.log(`invalid command ${args[0]}`);
+}
+
 async function checkPrebuild() {
   try {
-    validateMiddleware();
+    if (!validateMiddleware()) {
+      return false;
+    }
     if (!validateConfig(hookdeckConfig)) {
       return false;
     }
@@ -103,10 +127,6 @@ async function checkPrebuild() {
     console.error('Error:', error);
     return false;
   }
-}
-
-if (!checkPrebuild()) {
-  exit(1);
 }
 
 function generateId(prefix = '') {
@@ -297,7 +317,6 @@ function validateMiddleware() {
     console.warn(
       `Middleware file not found. Consider removing ${LIBRARY_NAME} from your dev dependencies if you are not using it.`,
     );
-    return;
   }
 
   // 2) Check if library is used in middleware.
@@ -341,10 +360,12 @@ function validateConfig(config) {
     );
   }
 
-  if (!config.vercel_url && !process.env.VERCEL_BRANCH_URL) {
-    console.info(
-      'Vercel url not present in config file nor in `process.env.VERCEL_BRANCH_URL`. ' +
-        `Please follow the steps in ${TUTORIAL_URL}.`,
+  if ( (config.vercel_url || '').trim() === '' && (process.env.VERCEL_BRANCH_URL || '').trim() === '') {
+    console.error(
+      '`VERCEL_BRANCH_URL` env var and `vercel_url` config key are empty. ' +
+      'It seems that this project is not connected to a Git repository. ' +
+      'In such case, can must define the env var `VERCEL_BRANCH_URL` or `vercel_url` key in `hookdeck.config` file pointing to your Vercel\'s public url.' + 
+      'Check this documentation for more information about Vercel url: https://vercel.com/docs/deployments/generated-urls'
     );
     return false;
   }
