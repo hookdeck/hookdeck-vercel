@@ -359,8 +359,10 @@ function validateConfig(config) {
 
   if ( (config.vercel_url || '').trim() === '' && (process.env.VERCEL_BRANCH_URL || '').trim() === '') {
     console.error(
-      'Vercel url not present in config file nor in `process.env.VERCEL_BRANCH_URL`. ' +
-        `Please follow the steps in ${TUTORIAL_URL}.`,
+      '`VERCEL_BRANCH_URL` env var and `vercel_url` config key are empty. ' +
+      'It seems that this project is not connected to a Git repository. ' +
+      'In such case, can must define the env var `VERCEL_BRANCH_URL` or `vercel_url` key in `hookdeck.config` file pointing to your Vercel\'s public url.' + 
+      'Check this documentation for more information about Vercel url: https://vercel.com/docs/deployments/generated-urls'
     );
     return false;
   }
