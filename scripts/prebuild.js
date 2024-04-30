@@ -9,7 +9,7 @@ const modulePath = path.join(process.cwd(), 'hookdeck.config');
 let hookdeckConfig;
 try {
   hookdeckConfig = require(modulePath);
-  console.log(`Module ${modulePath} successfully loaded`, hookdeckConfig);
+  console.log(`Module ${modulePath} successfully loaded`, JSON.stringify(hookdeckConfig));
 } catch (error) {
   console.error(`Error loading module ${modulePath}`, error);
   process.exit(1);
@@ -17,7 +17,7 @@ try {
 
 const LIBRARY_NAME = '@hookdeck/vercel';
 const WRAPPER_NAME = 'withHookdeck';
-const TUTORIAL_URL = 'https://hookdeck.com/docs';
+const TUTORIAL_URL = 'https://github.com/hookdeck/hookdeck-vercel/blob/main/README.md';
 
 const HookdeckEnvironment = require('@hookdeck/sdk').HookdeckEnvironment;
 const API_ENDPOINT = HookdeckEnvironment.Default;
@@ -64,7 +64,7 @@ async function checkPrebuild() {
 
     if (connections.length === 0) {
       console.warn(
-        'hookdeck.config.js file seems to be invalid. Please follow the steps in ${TUTORIAL_URL}.',
+        `hookdeck.config.js file seems to be invalid. Please follow the steps in ${TUTORIAL_URL}.`,
       );
       return false;
     }
@@ -331,6 +331,7 @@ function validateMiddleware() {
   } else {
     console.log(`Usage of ${LIBRARY_NAME} detected`);
   }
+  return true;
 }
 
 function validateConfig(config) {
