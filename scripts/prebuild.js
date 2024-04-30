@@ -64,7 +64,7 @@ async function checkPrebuild() {
 
     if (connections.length === 0) {
       console.warn(
-        'hookdeck.config.js file seems to be invalid. Please follow the steps in ${TUTORIAL_URL}.',
+        `hookdeck.config.js file seems to be invalid. Please follow the steps in ${TUTORIAL_URL}.`,
       );
       return false;
     }
