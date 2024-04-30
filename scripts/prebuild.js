@@ -55,10 +55,15 @@ async function checkPrebuild() {
         env_url = `https://${env_url}`;
       }
 
+      let conf_url = vercel_url;
+      if (conf_url && !conf_url.startsWith('http')) {
+        conf_url = `https://${conf_url}`;
+      }
+
       const conn = Object.assign(value, {
         api_key: api_key || process.env.HOOKDECK_API_KEY,
         signing_secret: signing_secret || process.env.HOOKDECK_SIGNING_SECRET,
-        host: vercel_url || env_url,
+        host: conf_url || env_url,
         matcher: key,
         source_name: value.name || (await vercelHash(key)),
         destination_name: slugify(key),
