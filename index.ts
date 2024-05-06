@@ -6,7 +6,7 @@ const HOOKDECK_PROCESSED_HEADER = 'x-hookdeck-signature';
 const HOOKDECK_SIGNATURE_HEADER_1 = 'x-hookdeck-signature';
 const HOOKDECK_SIGNATURE_HEADER_2 = 'x-hookdeck-signature-2';
 
-export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Promise<Response> {
+export function withHookdeck(config: HookdeckConfig, f?: Function): (args) => Promise<Response> {
   return async function (...args) {
     const request = args[0];
 
@@ -32,8 +32,10 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
       );
 
       if (matching.length === 0) {
-        console.debug(`[Hookdeck] No match for path '${cleanPath}'... calling user middleware`);
-        return Promise.resolve(f.apply(this, args));
+        console.debug(
+          `[Hookdeck] No match for path '${cleanPath}'... calling ${f ? 'user middleware' : 'next'}`,
+        );
+        return Promise.resolve(f ? f.apply(this, args) : next());
       }
 
       const api_key = config.api_key || process.env.HOOKDECK_API_KEY;
@@ -41,7 +43,7 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
         console.warn(
           "[Hookdeck] Hookdeck API key doesn't found. You must set it as a env variable named HOOKDECK_API_KEY or include it in your hookdeck.config.js file.",
         );
-        return Promise.resolve(f.apply(this, args));
+        return Promise.resolve(f ? f.apply(this, args) : next());
       }
 
       // Check if vercel or next env is develoment
@@ -52,7 +54,7 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
         console.warn(
           '[Hookdeck] Local development environment detected. Hookdeck middleware is disabled locally. Bypassing the middleware...',
         );
-        return Promise.resolve(f.apply(this, args));
+        return Promise.resolve(f ? f.apply(this, args) : next());
       }
 
       const contains_proccesed_header = !!request.headers.get(HOOKDECK_PROCESSED_HEADER);
@@ -75,7 +77,7 @@ export function withHookdeck(config: HookdeckConfig, f: Function): (args) => Pro
         return next();
       }
 
-      const middlewareResponse = await Promise.resolve(f.apply(this, args));
+      const middlewareResponse = await Promise.resolve(f ? f.apply(this, args) : next());
       // invoke middleware if it returns something different to `next()`
       if (
         middlewareResponse &&
