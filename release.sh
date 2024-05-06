@@ -8,7 +8,7 @@ function check_clean_git {
 
     if [[ "$BRANCH" != "main" ]]; then
         echo "Error: your branch is '$BRANCH'. It must be 'main'"
-        #exit 1;
+        exit 1;
     else
         echo "-- Branch is ok"
     fi
@@ -36,7 +36,7 @@ check_clean_git
 npm run format
 npm run lint
 npm run build
-#npm publish
+npm publish
 
 # tags
 git tag -f "${VERSION}"
