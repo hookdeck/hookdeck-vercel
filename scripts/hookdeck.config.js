@@ -22,9 +22,6 @@ const hookdeckConfig = {
       //     headers: {
       //       'Contenty-Type': 'application/json',
       //     },
-      //     body: {},
-      //     query: {},
-      //     path: {},
       //   },
       // ],
       // rate: {
