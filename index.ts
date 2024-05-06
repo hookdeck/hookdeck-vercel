@@ -32,7 +32,9 @@ export function withHookdeck(config: HookdeckConfig, f?: Function): (args) => Pr
       );
 
       if (matching.length === 0) {
-        console.debug(`[Hookdeck] No match for path '${cleanPath}'... ${f ? 'calling user middleware' : 'no action'}`);
+        console.debug(
+          `[Hookdeck] No match for path '${cleanPath}'... calling ${f ? 'user middleware' : 'next'}`,
+        );
         return Promise.resolve(f ? f.apply(this, args) : next());
       }
 
