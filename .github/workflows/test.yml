@@ -12,6 +12,9 @@ jobs:
       - name: Set up node
         uses: actions/setup-node@v4
 
+      - name: Install depedencies
+        run: npm install
+
       - name: Lint
         run: npm run lint
 
