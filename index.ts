@@ -41,7 +41,7 @@ export function withHookdeck(config: HookdeckConfig, f?: Function): (args) => Pr
       const api_key = config.api_key || process.env.HOOKDECK_API_KEY;
       if (!api_key) {
         console.warn(
-          "[Hookdeck] Hookdeck API key doesn't found. You must set it as a env variable named HOOKDECK_API_KEY or include it in your hookdeck.config.js file.",
+          "[Hookdeck] Hookdeck API key not found. You must set it as a env variable named HOOKDECK_API_KEY or include it in your hookdeck.config.js file.",
         );
         return Promise.resolve(f ? f.apply(this, args) : next());
       }
@@ -103,7 +103,7 @@ export function withHookdeck(config: HookdeckConfig, f?: Function): (args) => Pr
         const source_name = result.source_name;
         if (!source_name) {
           console.error(
-            "Hookdeck Source name doesn't found. You must include it in your hookdeck.config.js file.",
+            `Path match not found for path "${cleanPath}" with Hookdeck Source name "${source_name}". You must include "match" configuration in your hookdeck.config.js file.`,
           );
           return middlewareResponse;
         }
@@ -132,8 +132,7 @@ export function withHookdeck(config: HookdeckConfig, f?: Function): (args) => Pr
 
           if (promises.length === 0) {
             console.warn(
-              '[Hookdeck] Found indistinguishable source names, could not process',
-              array[0].source_name,
+              `[Hookdeck] Could not find a path match for "${array[0].source_name}". Skipping.`,
             );
           }
         }
@@ -144,7 +143,7 @@ export function withHookdeck(config: HookdeckConfig, f?: Function): (args) => Pr
     } catch (e) {
       // If an error is thrown here, it's better not to continue
       // with default middleware function, as it could lead to more errors
-      console.error('[Hookdeck] Exception on withHookdeck', e);
+      console.error('[Hookdeck] Exception in withHookdeck', e);
       return new Response(JSON.stringify(e), { status: 500 });
     }
   };
