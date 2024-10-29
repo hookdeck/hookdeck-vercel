@@ -15,6 +15,7 @@
     "build": "tsup && cp -r scripts dist",
     "postinstall": "node ./dist/scripts/addPrebuildScript.js --loglevel=verbose",
     "posti": "node ./dist/scripts/addPrebuildScript.js --loglevel=verbose",
+    "prerelease": "npm run build",
     "release": "npm publish --access public"
   },
   "repository": {
