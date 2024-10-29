@@ -422,7 +422,7 @@ async function updateConnection(api_key, id, config) {
       (config.auth_method || null) !== null ||
       (config.rate || null) !== null
     ) {
-      await updateDestination(api_key, json.destination.id, config);
+      await updateDestination(api_key, json.destination, config);
     }
 
     return json;
@@ -471,7 +471,7 @@ async function updateSource(api_key, id, config) {
   console.log('Source updated', json);
 }
 
-async function updateDestination(api_key, id, config) {
+async function updateDestination(api_key, destination, config) {
   const data = {};
   if (config.path_forwarding_disabled !== null) {
     data.path_forwarding_disabled = config.path_forwarding_disabled;
@@ -486,8 +486,21 @@ async function updateDestination(api_key, id, config) {
     data.rate_limit = config.rate.limit;
     data.rate_limit_period = config.rate.period;
   }
+  // url or cli_path are required to update destination
+  if ((config.host || null) !== null) {
+    data.url = config.host;
+  } else if (destination.url) {
+    data.url = destination.url;
+  } else if (destination.cli_path) {
+    data.cli_path = destination;
+  } else {
+    console.warn('No destination url or cli_path found in destination object. Update may fail.');
+  }
 
   const url = `${API_ENDPOINT}/destinations/${id}`;
+  console.log('Updating destination');
+  console.log(url);
+  console.log(data);
   const response = await fetch(url, {
     method: 'PUT',
     mode: 'cors',
