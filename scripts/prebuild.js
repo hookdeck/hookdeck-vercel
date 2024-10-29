@@ -497,6 +497,7 @@ async function updateDestination(api_key, destination, config) {
     console.warn('No destination url or cli_path found in destination object. Update may fail.');
   }
 
+  const id = destination.id;
   const url = `${API_ENDPOINT}/destinations/${id}`;
   console.log('Updating destination');
   console.log(url);
