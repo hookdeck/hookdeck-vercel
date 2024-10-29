@@ -321,3 +321,27 @@ When your Edge Middleware is triggered (because your middleware config matches),
       _NOTE_: If you are not using `next/server` or `@vercel/edge`, return a new `Response` with a header `x-middleware-next` with value `"1"` if you want you want Hookdeck to manage your request.
 
   2.  The received request comes from Hookdeck and has been processed. Then, the request is sent to the final route or URL you specified. Your `middleware` function code will not be executed this time.
+
+## Development
+
+### Build
+
+```sh
+npm run build
+```
+
+### Release
+
+Bump the version according to semver.
+
+Commit the changes.
+
+Push the changes to GitHub.
+
+Release to NPM
+
+```sh
+npm run release
+```
+
+Release on GitHub.
