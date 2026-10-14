@@ -9,6 +9,7 @@
     "dist"
   ],
   "scripts": {
+    "test": "npm run build && node --test tests/*.test.js",
     "format": "prettier --write '*.{json,js}' 'scripts/**/*.{js,ts}' './**/*.{js,ts}'",
     "lint": "eslint --ext .ts,.tsx -c .eslintrc . && prettier --check '*.{json,js}' 'scripts/**/*.{js,ts}' './**/*.{js,ts}'",
     "prepack": "npm run build",

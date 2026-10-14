@@ -41,7 +41,7 @@ export function withHookdeck(config: HookdeckConfig, f?: Function): (args) => Pr
       const api_key = config.api_key || process.env.HOOKDECK_API_KEY;
       if (!api_key) {
         console.warn(
-          "[Hookdeck] Hookdeck API key not found. You must set it as a env variable named HOOKDECK_API_KEY or include it in your hookdeck.config.js file.",
+          '[Hookdeck] Hookdeck API key not found. You must set it as a env variable named HOOKDECK_API_KEY or include it in your hookdeck.config.js file.',
         );
         return Promise.resolve(f ? f.apply(this, args) : next());
       }
@@ -164,30 +164,44 @@ function getPathnameWithFallback(request: any): string {
   return '';
 }
 
-async function verifyHookdeckSignature(request, secret: string | undefined): Promise<boolean> {
-  const signature1 = (request.headers ?? {})[HOOKDECK_SIGNATURE_HEADER_1];
-  const signature2 = (request.headers ?? {})[HOOKDECK_SIGNATURE_HEADER_2];
+async function verifyHookdeckSignature(
+  request: Request,
+  secret: string | undefined,
+): Promise<boolean> {
+  const signatures = [
+    request.headers.get(HOOKDECK_SIGNATURE_HEADER_1),
+    request.headers.get(HOOKDECK_SIGNATURE_HEADER_2),
+  ].filter((signature): signature is string => !!signature);
 
-  if (secret && (signature1 || signature2)) {
-    // TODO: assumed string body
-    const body = await new Response(request.body).text();
-    const encoder = new TextEncoder();
-    const keyData = encoder.encode(secret);
-    const bodyData = encoder.encode(body);
-    const cryptoKey = await crypto.subtle.importKey(
-      'raw',
-      keyData,
-      { name: 'HMAC', hash: { name: 'SHA-256' } },
-      false,
-      ['sign'],
-    );
-    const hmac = await crypto.subtle.sign('HMAC', cryptoKey, bodyData);
-    const hash = btoa(String.fromCharCode(...new Uint8Array(hmac)));
-
-    return hash === signature1 || hash === signature2;
+  if (!secret || signatures.length === 0) {
+    return false;
   }
 
-  return true;
+  // Verify the original bytes without consuming the application's request body.
+  const body = await request.clone().arrayBuffer();
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: { name: 'SHA-256' } },
+    false,
+    ['verify'],
+  );
+
+  for (const signature of signatures) {
+    let signatureBytes: Uint8Array;
+    try {
+      signatureBytes = Uint8Array.from(atob(signature), (character) => character.charCodeAt(0));
+    } catch {
+      // A malformed signature must not prevent checking the rotation signature.
+      continue;
+    }
+
+    if (await crypto.subtle.verify('HMAC', cryptoKey, signatureBytes, body)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 async function forwardToHookdeck(
