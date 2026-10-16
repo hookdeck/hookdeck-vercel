@@ -1,0 +1,5 @@
+{
+  "name": "@hookdeck/vercel",
+  "version": "0.1.4",
+  "exports": "./index.ts"
+}
